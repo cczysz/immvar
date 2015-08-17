@@ -12,7 +12,7 @@ phen <- phen[phen$CellType == 'CD14+16-Mono', ]
 # Imported as "exp_genes": GxN matrix of normalized expression values
 LoadData <- function(population=population,cell.type=cell.type) {
 	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
-	file.path <- paste(data.dir,"exp.genes.",cell.type,".",population,".Robj",sep="")
+	file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
 	load(file=file.path)
 }
 
@@ -49,7 +49,10 @@ AnalyzeFit <- function(eb.fit) {
 	dev.off()
 }
 
-LoadData()
+#LoadData()
+data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
+load(file=file.path)
 
 source('/home/t.cri.cczysz/thesis/scripts/peer.R')
 sex <- as.numeric(phen[phen$Race == 'Caucasian', ]$Sex == 'Male')
