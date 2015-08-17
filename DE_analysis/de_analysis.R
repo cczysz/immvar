@@ -1,6 +1,7 @@
 library(oligo)
 library(limma)
 library(ggplot2)
+library(peer)
 
 # Populations: Caucasian, African-American, Asian
 # Cell types: CD14, CD4
@@ -9,6 +10,19 @@ LoadData <- function(population=population,cell.type=cell.type) {
 	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
 	file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
 	load(file=file.path)
+}
+
+RunPeer <- function(expression, k=20, covs) {
+	model = PEER()
+	
+	# Expression must be in NxG. N number of samples, G number of genes
+	PEER_setPhenoMean(model,t(expression))
+	PEER_setNk(model,k)
+	PEER_setAdd_mean(model, TRUE)
+	PEER_setCovariates(model,as.matrix(covs)+1)
+	PEER_update(model)
+	peer.factors = PEER_getX(model)
+	return(peer.factors)
 }
 
 MakeResiduals <- function(input.row,peer.factors) {
@@ -64,8 +78,8 @@ data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
 file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
 load(file=file.path)
 
-source('/home/t.cri.cczysz/thesis/scripts/peer.R')
-sex <- as.numeric(phen[phen$Race == 'Caucasian', ]$Sex == 'Male')
+#source('/home/t.cri.cczysz/thesis/scripts/peer.R')
+sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
 peer.factors <- RunPeer(exp_genes,k=20,sex)
 
 expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
