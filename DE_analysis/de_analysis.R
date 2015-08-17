@@ -58,7 +58,7 @@ source('/home/t.cri.cczysz/thesis/scripts/peer.R')
 sex <- as.numeric(phen[phen$Race == 'Caucasian', ]$Sex == 'Male')
 peer.factors <- RunPeer(exp_genes,k=20,sex)
 
-expr.residuals <- apply(expression, 1, MakeResiduals, peer.factors=peer.factors)
+expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
 expr.residuals <- t(expr.residuals)
 
 eb.fit <- PerformDEAnalysis(expr.residuals,as.factor(sex))
