@@ -17,33 +17,45 @@ LoadData <- function(population=population,cell.type=cell.type) {
 }
 
 MakeResiduals <- function(input.row,peer.factors) {
-	residuals(lm(input.row ~ 0 + peer.factors[, -1]))
+	fit <- lm(input.row ~ peer.factors[, -1] - 1)
+	residuals(fit)
 }
 
 PerformDEAnalysis <- function(expr,samples) {
-	design <- model.matrix(~0 + samples)
+	design <- model.matrix(~ as.factor(samples)-1)
 	colnames(design) <- c("Female","Male")
 
 	fit <- lmFit(expr, design)
 
-	contrast.matrix <- makeContrasts(mf = Male - Female, levels=design)
+	contrast.matrix <- makeContrasts(Male - Female, levels=design)
 	contrast.fit <- contrasts.fit(fit, contrast.matrix)
-	eb.fit <- eBayes(contrast.fit, robust=F)
+	eb.fit <- eBayes(contrast.fit, robust=T)
 }
 
-AnalyzeFit <- function(eb.fit) {
+AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	top.de.genes <- row.names(topTable(eb.fit, number=100))
+	# load('/group/stranger-lab/moliva/ImmVar/probes_mapping/Robjects/merge_probes_DF.Robj')
 
-	DE_probesets <- unique(merge_probes_DF[merge_probes_DF$gene_ensembl%in%top.de.genes, ]$fsetid)
+	# DE_probesets <- unique(merge_probes_DF[merge_probes_DF$gene_ensembl%in%top.de.genes, ]$fsetid)
 
-	g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
+	#g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
 	pdf('/home/t.cri.cczysz/volcano.pdf')
-	g + geom_point() + xlab("fold change") + ylab("log odds")
+	volcanoplot(eb.fit)
+	#g + geom_point() + xlab("fold change") + ylab("log odds")
 	dev.off() 
+	if (F) {
+	pdf(file = '/home/t.cri.cczysz/qqplot.pdf')
+	qqplot(eb.fit$coef[1, ])
+	#qqt(eb.fit$coef / eb.fit$stdev.unscaled / eb.fit$sigma, df=eb.fit$df.residual, main="Ordinary t")
+	abline(0,1)
+	qqplot(eb.fit$coef[2, ])
+	abline(0,1)
+	dev.off()
+	}
 
 	pdf(file='/home/t.cri.cczysz/de_probesets.pdf')
 	for (set in top.de.genes) {
-		plot(density(expr.residuals[set, !!sex]),col='blue',xlim=c(-1,1),ylim=c(0,1))
+		plot(density(expr.residuals[set, !!sex]),col='blue',xlim=c(-1,1),ylim=c(0,3),main=set)
 		lines(density(expr.residuals[set, !sex]),col='red')
 	}
 	dev.off()
@@ -61,6 +73,8 @@ peer.factors <- RunPeer(exp_genes,k=20,sex)
 expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
 expr.residuals <- t(expr.residuals)
 
-eb.fit <- PerformDEAnalysis(expr.residuals,as.factor(sex))
+eb.fit <- PerformDEAnalysis(expr.residuals, sex)
 
-AnalyzeFit(eb.fit)
+AnalyzeFit(eb.fit, expr.residuals, sex)
+
+print(topTable(eb.fit, number=10))
