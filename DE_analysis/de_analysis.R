@@ -18,7 +18,7 @@ RunPeer <- function(expression, k=20, covs) {
 	# Expression must be in NxG. N number of samples, G number of genes
 	PEER_setPhenoMean(model,t(expression))
 	PEER_setNk(model,k)
-	PEER_setAdd_mean(model, TRUE)
+	#PEER_setAdd_mean(model, TRUE)
 	PEER_setCovariates(model,as.matrix(covs)+1)
 	PEER_update(model)
 	peer.factors = PEER_getX(model)
@@ -26,7 +26,7 @@ RunPeer <- function(expression, k=20, covs) {
 }
 
 MakeResiduals <- function(input.row,peer.factors) {
-	fit <- lm(input.row ~ peer.factors[, -1:-2] - 1)
+	fit <- lm(input.row ~ peer.factors[, -1] - 1)
 	residuals(fit)
 }
 
@@ -90,4 +90,4 @@ eb.fit <- PerformDEAnalysis(expr.residuals, sex)
 AnalyzeFit(eb.fit, expr.residuals, sex)
 
 print(topTable(eb.fit, number=10))
-save(expr.residuals,file='/group/stranger-lab/immvar_data/CD14.Caucasian.Residuals.Robj')
+save(expr.residuals,file='/group/stranger-lab/immvar_data/CD14.Caucasian.Residuals_no_mean.Robj')
