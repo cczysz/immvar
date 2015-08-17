@@ -2,11 +2,6 @@ library(oligo)
 library(limma)
 library(ggplot2)
 
-population <<- "Caucasian"
-cell.type <<- "CD14"
-load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
-phen <- phen[phen$CellType == 'CD14+16-Mono', ]
-
 # Populations: Caucasian, African-American, Asian
 # Cell types: CD14, CD4
 # Imported as "exp_genes": GxN matrix of normalized expression values
@@ -17,7 +12,7 @@ LoadData <- function(population=population,cell.type=cell.type) {
 }
 
 MakeResiduals <- function(input.row,peer.factors) {
-	fit <- lm(input.row ~ peer.factors[, -1] - 1)
+	fit <- lm(input.row ~ peer.factors[, -1:-2] - 1)
 	residuals(fit)
 }
 
@@ -44,12 +39,11 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	#g + geom_point() + xlab("fold change") + ylab("log odds")
 	dev.off() 
 	if (F) {
+
+# Plot p.value here
 	pdf(file = '/home/t.cri.cczysz/qqplot.pdf')
-	qqplot(eb.fit$coef[1, ])
-	#qqt(eb.fit$coef / eb.fit$stdev.unscaled / eb.fit$sigma, df=eb.fit$df.residual, main="Ordinary t")
-	abline(0,1)
-	qqplot(eb.fit$coef[2, ])
-	abline(0,1)
+	x <- hist(seq(1000),plot=F,freq=F)
+
 	dev.off()
 	}
 
@@ -62,6 +56,10 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 }
 
 #LoadData()
+population <<- "Caucasian"
+cell.type <<- "CD14"
+load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
+phen <- phen[phen$CellType == 'CD14+16-Mono', ]
 data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
 file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
 load(file=file.path)
@@ -78,3 +76,4 @@ eb.fit <- PerformDEAnalysis(expr.residuals, sex)
 AnalyzeFit(eb.fit, expr.residuals, sex)
 
 print(topTable(eb.fit, number=10))
+save(expr.residuals,file='/group/stranger-lab/immvar_data/CD14.Caucasian.Residuals.Robj')
