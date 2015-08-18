@@ -49,21 +49,6 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
 	write.table(topTable(eb.fit,number=Inf,p.value=0.05),file=paste(save.path,save.file.name,sep="/"))
 
-	volcano.file <- paste("volcano",population,cell.type,"pdf",sep=".")
-	pdf(file=paste(save.path,volcano.file,sep="/"))
-	volcanoplot(eb.fit)
-	#g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
-	#g + geom_point() + xlab("fold change") + ylab("log odds")
-	dev.off() 
-	
-	if (F) {
-
-	# Plot p.value here
-	pdf(file = '/home/t.cri.cczysz/qqplot.pdf')
-	x <- hist(seq(1000),plot=F,freq=F)
-	dev.off()
-	}
-
 	de.expr.file <- paste("de_expression",population,cell.type,"pdf",sep=".")
 	pdf(file=paste(save.path,de.expr.file,sep="/"))
 	for (set in top.de.genes) {
@@ -81,6 +66,18 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 		plot(dm,col='blue',main=paste(set,"\n","Wilcox Test: ",pval,sep=""),xlim=c(xmin,xmax),ylim=c(0,ymax))
 		lines(df,col='red')
 	}
+	dev.off()
+
+	ttable <- topTable(eb.fit,number=Inf)
+	ftest.results <- c()
+	for (gene in rownames(ttable)) {
+		f.test <- var.test(expr.residuals[gene,!!sex],expr.residuals[gene,!sex])
+		f.pval <- f.test$p.value
+		ftest.results <- rbind(ftest.results, c(gene,f.test,f.pval))
+	}
+	write.table(ftest.results,file="/group/stranger-lab/czysz/ImmVar/ftestresults.txt")
+	pdf(file=paste(save.path,"plots",paste("ftest",population,cell.type,"pdf",sep="."),sep="/"))
+	plot(density(f.pval),main=paste("F test",cell.type,population,))
 	dev.off()
 }
 
@@ -101,17 +98,17 @@ for (cell.type in c("CD14","CD4")) {
 	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
 
 	if (F) {
-	file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
-	load(file=file.path)
+		file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
+		load(file=file.path)
 
-	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
-	peer.factors <- RunPeer(exp_genes,k=20,sex)
+		sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
+		peer.factors <- RunPeer(exp_genes,k=20,sex)
 
-	expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
-	expr.residuals <- t(expr.residuals)
+		expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
+		expr.residuals <- t(expr.residuals)
 
-	save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
-	# save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+		save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
+		# save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
 	}
 
 	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
@@ -119,8 +116,7 @@ for (cell.type in c("CD14","CD4")) {
 	fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
 	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
 
-	#AnalyzeFit(eb.fit, expr.residuals, sex)
+	AnalyzeFit(eb.fit, expr.residuals, sex)
 
-	#print(topTable(eb.fit, number=10))
 	}
 }

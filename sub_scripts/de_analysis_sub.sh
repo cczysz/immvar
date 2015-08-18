@@ -7,7 +7,7 @@
 #PBS -l mem=16gb
 
 #PBS -o $HOME/
-#PBS -e $HOME/oligo.err
+#PBS -e $HOME/de.err
 
 module load R/3.1.0
 
