@@ -47,17 +47,17 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 
 	# DE_probesets <- unique(merge_probes_DF[merge_probes_DF$gene_ensembl%in%top.de.genes, ]$fsetid)
 
-	#g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
 	pdf('/home/t.cri.cczysz/volcano.pdf')
 	volcanoplot(eb.fit)
+	#g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
 	#g + geom_point() + xlab("fold change") + ylab("log odds")
 	dev.off() 
+	
 	if (F) {
 
-# Plot p.value here
+	# Plot p.value here
 	pdf(file = '/home/t.cri.cczysz/qqplot.pdf')
 	x <- hist(seq(1000),plot=F,freq=F)
-
 	dev.off()
 	}
 
@@ -69,25 +69,32 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	dev.off()
 }
 
-#LoadData()
-population <<- "Caucasian"
-cell.type <<- "CD14"
-load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
-phen <- phen[phen$CellType == 'CD14+16-Mono', ]
-data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
-file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
-load(file=file.path)
+for (population in c("Caucasian","African-American","Asian")) {
+for (cell.type in c("CD14","CD4")) {
+	load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
+	
+	if (cell.type == "CD14") phen.cell.type <- "CD14+16-Mono"
+	else phen.cell.type <- "CD4TNve"
 
-#source('/home/t.cri.cczysz/thesis/scripts/peer.R')
-sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
-peer.factors <- RunPeer(exp_genes,k=20,sex)
+	phen <- phen[phen$CellType == phen.cell.type, ]
 
-expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
-expr.residuals <- t(expr.residuals)
+	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+	file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
+	load(file=file.path)
 
-eb.fit <- PerformDEAnalysis(expr.residuals, sex)
+	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
+	peer.factors <- RunPeer(exp_genes,k=20,sex)
 
-AnalyzeFit(eb.fit, expr.residuals, sex)
+	expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
+	expr.residuals <- t(expr.residuals)
 
-print(topTable(eb.fit, number=10))
-save(expr.residuals,file='/group/stranger-lab/immvar_data/CD14.Caucasian.Residuals_no_mean.Robj')
+	save.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
+	save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+
+	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
+
+	AnalyzeFit(eb.fit, expr.residuals, sex)
+
+	print(topTable(eb.fit, number=10))
+	}
+}
