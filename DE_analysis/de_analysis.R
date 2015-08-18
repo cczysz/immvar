@@ -42,15 +42,12 @@ PerformDEAnalysis <- function(expr,samples) {
 }
 
 AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
-	top.de.genes <- row.names(topTable(eb.fit, number=100))
+	top.de.genes <- row.names(topTable(eb.fit, number=Inf,p.value=0.05))
 	# load('/group/stranger-lab/moliva/ImmVar/probes_mapping/Robjects/merge_probes_DF.Robj')
 
 	save.path <- "/group/stranger-lab/czysz/ImmVar"
 	save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
-	write.table(topTable(eb.fit,number=100),file=save.file.name)
-	#write.fit(eb.fit,file=paste(save.path,save.file.name,sep="/"),adjust="BH")
-
-	# DE_probesets <- unique(merge_probes_DF[merge_probes_DF$gene_ensembl%in%top.de.genes, ]$fsetid)
+	write.table(topTable(eb.fit,number=Inf,p.value=0.05),file=paste(save.path,save.file.name,sep="/"))
 
 	volcano.file <- paste("volcano",population,cell.type,"pdf",sep=".")
 	pdf(file=paste(save.path,volcano.file,sep="/"))
@@ -70,8 +67,19 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	de.expr.file <- paste("de_expression",population,cell.type,"pdf",sep=".")
 	pdf(file=paste(save.path,de.expr.file,sep="/"))
 	for (set in top.de.genes) {
-		plot(density(expr.residuals[set, !!sex]),col='blue',xlim=c(-10,10),ylim=c(0,2),main=set)
-		lines(density(expr.residuals[set, !sex]),col='red')
+		#plot(density(expr.residuals[set, !!sex]),col='blue',xlim=c(-10,10),ylim=c(0,2),main=set)
+		male <- expr.residuals[set, !!sex]
+		female <- expr.residuals[set, !sex]
+
+		dm <- density(male)
+		df <- density(female)
+		xmin <- floor(min(min(dm$x),min(df$x)))
+		xmax <- ceiling(max(max(dm$x),max(df$x)))
+		ymax <- ceiling(max(max(dm$y),max(df$y)))
+
+		pval <- wilcox.test(male,female)$p.value
+		plot(dm,col='blue',main=paste(set,"\n","Wilcox Test: ",pval,sep=""),xlim=c(xmin,xmax),ylim=c(0,ymax))
+		lines(df,col='red')
 	}
 	dev.off()
 }
@@ -88,6 +96,11 @@ for (cell.type in c("CD14","CD4")) {
 	phen <- phen[phen$CellType == phen.cell.type, ]
 
 	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+	save.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
+	load(file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
+
+	if (F) {
 	file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
 	load(file=file.path)
 
@@ -99,11 +112,15 @@ for (cell.type in c("CD14","CD4")) {
 
 	save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
 	# save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+	}
 
 	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
 
-	AnalyzeFit(eb.fit, expr.residuals, sex)
+	fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
+	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
 
-	print(topTable(eb.fit, number=10))
+	#AnalyzeFit(eb.fit, expr.residuals, sex)
+
+	#print(topTable(eb.fit, number=10))
 	}
 }
