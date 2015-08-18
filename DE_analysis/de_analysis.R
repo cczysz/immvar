@@ -45,9 +45,15 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	top.de.genes <- row.names(topTable(eb.fit, number=100))
 	# load('/group/stranger-lab/moliva/ImmVar/probes_mapping/Robjects/merge_probes_DF.Robj')
 
+	save.path <- "/group/stranger-lab/czysz/ImmVar"
+	save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
+	write.table(topTable(eb.fit,number=100),file=save.file.name)
+	#write.fit(eb.fit,file=paste(save.path,save.file.name,sep="/"),adjust="BH")
+
 	# DE_probesets <- unique(merge_probes_DF[merge_probes_DF$gene_ensembl%in%top.de.genes, ]$fsetid)
 
-	pdf('/home/t.cri.cczysz/volcano.pdf')
+	volcano.file <- paste("volcano",population,cell.type,"pdf",sep=".")
+	pdf(file=paste(save.path,volcano.file,sep="/"))
 	volcanoplot(eb.fit)
 	#g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
 	#g + geom_point() + xlab("fold change") + ylab("log odds")
@@ -61,9 +67,10 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	dev.off()
 	}
 
-	pdf(file='/home/t.cri.cczysz/de_probesets.pdf')
+	de.expr.file <- paste("de_expression",population,cell.type,"pdf",sep=".")
+	pdf(file=paste(save.path,de.expr.file,sep="/"))
 	for (set in top.de.genes) {
-		plot(density(expr.residuals[set, !!sex]),col='blue',xlim=c(-1,1),ylim=c(0,3),main=set)
+		plot(density(expr.residuals[set, !!sex]),col='blue',xlim=c(-10,10),ylim=c(0,2),main=set)
 		lines(density(expr.residuals[set, !sex]),col='red')
 	}
 	dev.off()
@@ -71,6 +78,8 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 
 for (population in c("Caucasian","African-American","Asian")) {
 for (cell.type in c("CD14","CD4")) {
+	population <<- population
+	cell.type <<- cell.type
 	load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
 	
 	if (cell.type == "CD14") phen.cell.type <- "CD14+16-Mono"
@@ -88,8 +97,8 @@ for (cell.type in c("CD14","CD4")) {
 	expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
 	expr.residuals <- t(expr.residuals)
 
-	save.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
-	save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+	save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
+	# save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
 
 	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
 
