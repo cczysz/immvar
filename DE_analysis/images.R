@@ -8,7 +8,7 @@ cell.types <- c("CD14","CD4")
 populations <- c("Caucasian","African-American","Asian")
 
 MakeVolcano <- function(fit,cell.type,population) {
-	file.n <- paste("volcano",cell.type,population,sep=".")
+	file.n <- paste("volcano",cell.type,population,"pdf",sep=".")
 
 	ttable <- topTable(fit, number=Inf)
 	chrs <- c()
@@ -17,9 +17,8 @@ MakeVolcano <- function(fit,cell.type,population) {
 		chrs <- c(chrs,dat$chr)
 	}	
 	g <- ggplot(data=data.frame(ttable), aes(x=logFC,y=-log10(P.Value),color=as.factor(chrs),label=chrs))
-	pdf(file=paste("/group/stranger-lab/czysz/ImmVar/plots/",file.n,sep=""))
 	g + geom_text(size=3) + theme(legend.position="none")
-	dev.off()
+	ggsave(filename=paste("/group/stranger-lab/czysz/ImmVar/plots/",file.n,sep=""))
 }
 
 MakeQQ <- function(fit,cell.type,population) {
