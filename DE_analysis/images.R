@@ -8,7 +8,20 @@ cell.types <- c("CD14","CD4")
 populations <- c("Caucasian","African-American","Asian")
 
 MakeVolcano <- function(fit) {
+	ttable <- topTable(fit, number=Inf)
+	fc <- ttable$logFC
+	pval <- -log10(ttable$P.Value)
 
+	#annots <- read.table(file="/group/stranger-lab/moliva/ImmVar/probes_mapping/annotations/gencode.v22.TSS.txt",header=F,as.is=T)
+	#colnames(annots) <- c("gene_id","gene_symbol","chr","start","stop","strand")
+
+	chrs <- c()
+	for (gene in rownames(ttable)) {
+		chrs <- c(chrs,annots[gene,"chr"])
+	}	
+	g <- ggplot(data=data.frame(ttable), aes(x=logFC,y=-log10(P.Value),color=as.factor(chrs),label=chrs))
+	g + geom_text()
+	dev.off()
 }
 
 MakeQQ <- function(fit,cell.type,population) {
@@ -55,6 +68,9 @@ MakeExprs <- function(fit,residuals) {
 
 }
 
+annots <<- read.table(file="/group/stranger-lab/moliva/ImmVar/probes_mapping/annotations/gencode.v22.TSS.txt",header=F,as.is=T)
+colnames(annots) <- c("gene_id","gene_symbol","chr","start","stop","strand")
+
 for (population in populations) {
 for (cell.type in cell.types) {
 	residual.file <- paste("residuals",cell.type,population,"Robj",sep=".")
@@ -62,8 +78,8 @@ for (cell.type in cell.types) {
 	load(file=paste(data.dir,residual.file,sep="/"))
 	load(file=paste(data.dir,fit.file,sep="/"))
 
-	#MakeVolcano(eb.fit)
-	MakeQQ(eb.fit,cell.type,population)
+	MakeVolcano(eb.fit)
+	#MakeQQ(eb.fit,cell.type,population)
 	#MakeExprs(eb.fit, expr.residuals)
 
 }
