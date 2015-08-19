@@ -80,6 +80,23 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	plot(density(f.pval),main=paste("F test",cell.type,population,))
 	dev.off()
 }
+FTest <- function(fit, expr.residuals, sex) {
+	ttable <- topTable(fit,number=Inf)
+	ftest.results <- data.frame()
+	for (gene in rownames(ttable)) {
+		gene <- gene
+		f.test <- var.test(expr.residuals[gene,!!sex],expr.residuals[gene,!sex])
+		#f.pval <- f.test$p.value
+		dat.f <- data.frame(f=f.test$statistic, 
+			p.val=f.test$p.value, 
+			ratio=f.test$estimate[[1]],
+			row.names=f.test$data.name)
+		rownames(dat.f) <- gene
+		ftest.results <- rbind(ftest.results, dat.f)
+	}
+	f.name <- paste("ftest",cell.type,population,"Robj",sep=".")
+	save(file=paste('/group/stranger-lab/immvar_data/',f.name,sep=""))
+}
 
 for (population in c("Caucasian","African-American","Asian")) {
 for (cell.type in c("CD14","CD4")) {
@@ -92,9 +109,12 @@ for (cell.type in c("CD14","CD4")) {
 
 	phen <- phen[phen$CellType == phen.cell.type, ]
 
-	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
-	save.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
-	load(file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+	#data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+	data.dir <- "/group/stranger-lab/immvar_data/"
+	res.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
+	load(file = paste(data.dir,res.file.name,sep=""))
+	fit.file.name <- paste("fit",cell.type,population,"Robj",sep=".")
+	load(file = paste(data.dir,fit.file.name,sep=""))
 	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
 
 	if (F) {
@@ -109,14 +129,17 @@ for (cell.type in c("CD14","CD4")) {
 
 		save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
 		# save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
-	}
+	
 
 	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
 
 	fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
 	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
+	}
 
-	AnalyzeFit(eb.fit, expr.residuals, sex)
+	#AnalyzeFit(eb.fit, expr.residuals, sex)
+	
+	FTest(eb.fit,expr.residuals, sex)
 
 	}
 }
