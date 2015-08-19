@@ -15,9 +15,34 @@ MakeQQ <- function(fit,cell.type,population) {
 
 	ttable <- topTable(fit,number=Inf)
 	file.name <- paste("qq_plot",cell.type,population,"pdf",sep=".")
+	o <- -log10(sort(fit$p.value,decreasing=F))
+	e <- -log10(seq(length(o))/length(o))
+	N <- length(o)
+	c95 <- rep(0,N)
+	c05 <- rep(0,N)
+	 
+	for(i in 1:N){
+	c95[i] <- qbeta(0.95,i,N-i+1)
+	c05[i] <- qbeta(0.05,i,N-i+1)
+	}
+	MAX <- max(c(o,e)) 
 	pdf(file=paste(plot.dir,file.name,sep="/"))
-	qqplot(runif(1000),ttable$P.Value,main=paste("QQ Plot ",cell.type,population,sep="."))
-	abline(0,1)
+	qqplot(e,o,ylim=c(0,MAX), main=paste(cell.type,population))
+	par(new=T)
+	plot(e, -log(c95,10), ylim=c(0,MAX), type="l", 
+		axes=FALSE, xlab="", ylab="")
+	par(new=T)
+	plot(e, -log(c05,10), ylim=c(0,MAX), type="l", 
+		axes=FALSE, xlab="", ylab="")
+	## add the diagonal
+	abline(0,1,col="red")
+	if (F) {
+	plot(e,o,pch=19,cex=0.25,
+		xlab=expression(Expected~~-log[10](italic(p))),
+		ylab=expression(Observed~~-log[10](italic(p))),
+		xlim=c(0,max(e)),
+		ylim=c(0,max(e)))
+	}
 	dev.off()	
 	
 	file.name <- paste("density",cell.type,population,"pdf",sep=".")
