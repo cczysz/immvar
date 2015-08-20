@@ -85,6 +85,8 @@ FTest <- function(fit, expr.residuals, sex) {
 	ftest.results <- data.frame()
 	for (gene in rownames(ttable)) {
 		gene <- gene
+		# Filter for no expression in either males or females
+			# Get list from Meri
 		f.test <- var.test(expr.residuals[gene,!!sex],expr.residuals[gene,!sex])
 		#f.pval <- f.test$p.value
 		dat.f <- data.frame(f=f.test$statistic, 
@@ -95,7 +97,7 @@ FTest <- function(fit, expr.residuals, sex) {
 		ftest.results <- rbind(ftest.results, dat.f)
 	}
 	f.name <- paste("ftest",cell.type,population,"Robj",sep=".")
-	save(file=paste('/group/stranger-lab/immvar_data/',f.name,sep=""))
+	save(ftest.results,file=paste('/group/stranger-lab/immvar_data/',f.name,sep=""))
 }
 
 for (population in c("Caucasian","African-American","Asian")) {

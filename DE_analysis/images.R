@@ -37,7 +37,7 @@ MakeQQ <- function(fit,cell.type,population) {
 	}
 	MAX <- max(c(o,e)) 
 	pdf(file=paste(plot.dir,file.name,sep="/"))
-	qqplot(e,o,ylim=c(0,MAX), main=paste(cell.type,population))
+	qqplot(e,o,ylim=c(0,MAX), main=paste(cell.type,population),ylab="Observed -log(p)",xlab="Expected -log(p)",cex.axis=1.5)
 	par(new=T)
 	plot(e, -log(c95,10), ylim=c(0,MAX), type="l", 
 		axes=FALSE, xlab="", ylab="")
@@ -48,7 +48,7 @@ MakeQQ <- function(fit,cell.type,population) {
 	abline(0,1,col="red")
 	if (F) {
 	plot(e,o,pch=19,cex=0.25,
-		xlab=expression(Expected~~-log[10](italic(p))),
+		xlab="Expected -log[10](italic(p))",
 		ylab=expression(Observed~~-log[10](italic(p))),
 		xlim=c(0,max(e)),
 		ylim=c(0,max(e)))
@@ -75,8 +75,8 @@ for (cell.type in cell.types) {
 	load(file=paste(data.dir,residual.file,sep="/"))
 	load(file=paste(data.dir,fit.file,sep="/"))
 
-	MakeVolcano(eb.fit,cell.type,population)
-	#MakeQQ(eb.fit,cell.type,population)
+	#MakeVolcano(eb.fit,cell.type,population)
+	MakeQQ(eb.fit,cell.type,population)
 	#MakeExprs(eb.fit, expr.residuals)
 
 }
