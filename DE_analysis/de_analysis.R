@@ -125,7 +125,7 @@ FTest <- function(fit, exp_genes, expr.residuals, sex) {
 		x_min <- min(min(male_exp$x), min(female_exp$x))
 		x_max <- max(max(male_exp$x), max(female_exp$x))
 		ylim <- max(max(male_exp$y), max(female_exp$y))
-		plot(density(expr.residuals[gene,males]),col="blue",xlim=c(x_min,x_max),ylim=c(0,ylim))
+		plot(density(expr.residuals[gene,males]),col="blue",xlim=c(x_min,x_max),ylim=c(0,ylim),main=gene)
 		lines(density(expr.residuals[gene,females]),col="red")
 	}
 	dev.off()
