@@ -1,7 +1,8 @@
-library(oligo)
+#library(oligo)
 library(limma)
-library(ggplot2)
-library(peer)
+#library(ggplot2)
+#library(peer)
+library(genefilter)
 
 # Populations: Caucasian, African-American, Asian
 # Cell types: CD14, CD4
@@ -18,7 +19,6 @@ RunPeer <- function(expression, k=20, covs) {
 	# Expression must be in NxG. N number of samples, G number of genes
 	PEER_setPhenoMean(model,t(expression))
 	PEER_setNk(model,k)
-	#PEER_setAdd_mean(model, TRUE)
 	PEER_setCovariates(model,as.matrix(covs)+1)
 	PEER_update(model)
 	peer.factors = PEER_getX(model)
@@ -68,26 +68,41 @@ AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
 	}
 	dev.off()
 
-	ttable <- topTable(eb.fit,number=Inf)
-	ftest.results <- c()
-	for (gene in rownames(ttable)) {
-		f.test <- var.test(expr.residuals[gene,!!sex],expr.residuals[gene,!sex])
-		f.pval <- f.test$p.value
-		ftest.results <- rbind(ftest.results, c(gene,f.test,f.pval))
-	}
-	write.table(ftest.results,file="/group/stranger-lab/czysz/ImmVar/ftestresults.txt")
-	pdf(file=paste(save.path,"plots",paste("ftest",population,cell.type,"pdf",sep="."),sep="/"))
-	plot(density(f.pval),main=paste("F test",cell.type,population,))
-	dev.off()
 }
-FTest <- function(fit, expr.residuals, sex) {
-	ttable <- topTable(fit,number=Inf)
+FTest <- function(fit, exp_genes, expr.residuals, sex) {
+	#ttable <- topTable(fit,number=Inf)
+	males <- !!sex
+	females <- !sex
+
+	# Expression-Based Filtering
+	females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(!sex))/3)
+	males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(!!sex))/3)
+	
+	male_filt_genes <- genefilter(exp_genes[,males],filterfun(males_filt))
+	female_filt_genes <- genefilter(exp_genes[,females],filterfun(females_filt))
+
+	filt_genes_AND <- intersect(male_filt_genes[!male_filt_genes],female_filt_genes[!female_filt_genes])
+	filt_genes_OR <- union(male_filt_genes[!male_filt_genes],female_filt_genes[!female_filt_genes])
+
+	# Variance-based filtering
+	var.filt.males <- varFilter(exp_genes[,males],var.cutoff=0.1) # Default cutoff of 0.5 removes 50% of genes
+	var.filt.females <- varFilter(exp_genes[,females],var.cutoff=0.1)
+	var.filt <- union(rownames(var.filt.males), rownames(var.filt.females))
+
+	genes_to_filter <- filt_genes_OR[!(filt_genes_OR%in%var.filt)]
+	residuals.filtered <- expr.residuals[!(rownames(expr.residuals)%in%genes_to_filter),]
+	# Filtering
+	#filter.val <- quantile(as.numeric(expr.residuals),probs=c(0.1))
+	#f1 <- pOverA(p=0.1, A=filter.val)
+	#f1 <- kOverA(k=10, A=filter.val)
+	#ffun <- filterfun(f1)
+	#filt.exp <- genefilter(expr.residuals, ffun)
+
 	ftest.results <- data.frame()
-	for (gene in rownames(ttable)) {
-		gene <- gene
+	for (gene in rownames(residuals.filtered)) {
+		gene.exp <- residuals.filtered[gene, ]
 		# Filter for no expression in either males or females
-			# Get list from Meri
-		f.test <- var.test(expr.residuals[gene,!!sex],expr.residuals[gene,!sex])
+		f.test <- var.test(gene.exp[!!sex], gene.exp[!sex])
 		#f.pval <- f.test$p.value
 		dat.f <- data.frame(f=f.test$statistic, 
 			p.val=f.test$p.value, 
@@ -96,8 +111,25 @@ FTest <- function(fit, expr.residuals, sex) {
 		rownames(dat.f) <- gene
 		ftest.results <- rbind(ftest.results, dat.f)
 	}
+	p.adj <- p.adjust(ftest.results$p.val, method="fdr")
+	ftest.results <- cbind(ftest.results, p.adj)
 	f.name <- paste("ftest",cell.type,population,"Robj",sep=".")
 	save(ftest.results,file=paste('/group/stranger-lab/immvar_data/',f.name,sep=""))
+
+	f.name <- paste("sig.ftest",cell.type,population,"pdf",sep=".")
+	sig.results <- ftest.results[ftest.results$p.adj < 0.05, ]
+	pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/',f.name,sep=""))
+	for (gene in rownames(sig.results)) {
+		male_exp <- density(expr.residuals[gene, males])
+		female_exp <- density(expr.residuals[gene, females])
+		x_min <- min(min(male_exp$x), min(female_exp$x))
+		x_max <- max(max(male_exp$x), max(female_exp$x))
+		ylim <- max(max(male_exp$y), max(female_exp$y))
+		plot(density(expr.residuals[gene,males]),col="blue",xlim=c(x_min,x_max),ylim=c(0,ylim))
+		lines(density(expr.residuals[gene,females]),col="red")
+	}
+	dev.off()
+	
 }
 
 for (population in c("Caucasian","African-American","Asian")) {
@@ -111,7 +143,9 @@ for (cell.type in c("CD14","CD4")) {
 
 	phen <- phen[phen$CellType == phen.cell.type, ]
 
-	#data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+	load(file=paste(data.dir,paste("exp_genes",cell.type,population,"Robj",sep="."),sep=""))
+
 	data.dir <- "/group/stranger-lab/immvar_data/"
 	res.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
 	load(file = paste(data.dir,res.file.name,sep=""))
@@ -141,7 +175,7 @@ for (cell.type in c("CD14","CD4")) {
 
 	#AnalyzeFit(eb.fit, expr.residuals, sex)
 	
-	FTest(eb.fit,expr.residuals, sex)
+	FTest(eb.fit,exp_genes,expr.residuals, sex)
 
 	}
 }
