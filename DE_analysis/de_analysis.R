@@ -87,10 +87,11 @@ FTest <- function(fit, exp_genes, expr.residuals, sex) {
 	# Variance-based filtering
 	var.filt.males <- varFilter(exp_genes[,males],var.cutoff=0.1) # Default cutoff of 0.5 removes 50% of genes
 	var.filt.females <- varFilter(exp_genes[,females],var.cutoff=0.1)
-	var.filt <- union(rownames(var.filt.males), rownames(var.filt.females))
+	var.filt <- intersect(rownames(var.filt.males), rownames(var.filt.females))
 
 	genes_to_filter <- filt_genes_OR[!(filt_genes_OR%in%var.filt)]
 	residuals.filtered <- expr.residuals[!(rownames(expr.residuals)%in%genes_to_filter),]
+
 	# Filtering
 	#filter.val <- quantile(as.numeric(expr.residuals),probs=c(0.1))
 	#f1 <- pOverA(p=0.1, A=filter.val)
@@ -113,11 +114,12 @@ FTest <- function(fit, exp_genes, expr.residuals, sex) {
 	}
 	p.adj <- p.adjust(ftest.results$p.val, method="fdr")
 	ftest.results <- cbind(ftest.results, p.adj)
+	sig.results <- ftest.results[ftest.results$p.adj < 0.05, ]
 	f.name <- paste("ftest",cell.type,population,"Robj",sep=".")
-	save(ftest.results,file=paste('/group/stranger-lab/immvar_data/',f.name,sep=""))
+	save(ftest.results,sig.results,file=paste('/group/stranger-lab/immvar_data/',f.name,sep=""))
 
 	f.name <- paste("sig.ftest",cell.type,population,"pdf",sep=".")
-	sig.results <- ftest.results[ftest.results$p.adj < 0.05, ]
+	#sig.results <- ftest.results[ftest.results$p.adj < 0.05, ]
 	pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/',f.name,sep=""))
 	for (gene in rownames(sig.results)) {
 		male_exp <- density(expr.residuals[gene, males])
@@ -143,10 +145,11 @@ for (cell.type in c("CD14","CD4")) {
 
 	phen <- phen[phen$CellType == phen.cell.type, ]
 
-	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
-	load(file=paste(data.dir,paste("exp_genes",cell.type,population,"Robj",sep="."),sep=""))
+	#data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+	#load(file=paste(data.dir,paste("exp_genes",cell.type,population,"Robj",sep="."),sep=""))
 
 	data.dir <- "/group/stranger-lab/immvar_data/"
+	load(file=paste(data.dir,paste("exp_genes_ftest",cell.type,population,"Robj",sep="."),sep=""))
 	res.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
 	load(file = paste(data.dir,res.file.name,sep=""))
 	fit.file.name <- paste("fit",cell.type,population,"Robj",sep=".")

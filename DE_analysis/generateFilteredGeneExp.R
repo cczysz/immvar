@@ -32,7 +32,7 @@ if( !args$cell_type%in%c("CD4","CD14")) {
 }
 
 ###### MAPPING BASED FILTERING
-
+setwd('/group/stranger-lab/moliva/ImmVar')
 par.genes=as.character(read.table("probes_mapping/annotations/par.genes.txt")[,1])
 Y.degenerate=as.character(read.table("probes_mapping/annotations/chrY.degenerate.txt")[,1])
 Y.degenerate_Xhomolog=as.character(read.table("probes_mapping/annotations/chrY.degenerate_Xhomolog.txt")[,1])
@@ -228,13 +228,34 @@ exp_genes=exp_genes[genes,];
 
 ### Filter genes expressed below 10% quantile in >2/3 of males and >2/3 of females
 
+females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(females)/3))
+males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(males)/3))
+genes_above_threshold_index=genefilter(exp_genes[,males],filterfun(males_filt)) | genefilter(exp_genes[,females],filterfun(females_filt))
+print(dim(exp_genes))
+exp_genes=exp_genes[genes_above_threshold_index,]
+if (F) {
 females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(females))/3)
 males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(males))/3)
-genes_above_threshold_index=genefilter(exp_genes[,males],filterfun(males_filt)) & genefilter(exp_genes[,females],filterfun(females_filt))
-exp_genes=exp_genes[genes_above_threshold_index,]
+
+male_filt_genes <- genefilter(exp_genes[,males],filterfun(males_filt))
+female_filt_genes <- genefilter(exp_genes[,females],filterfun(females_filt))
+
+filt_genes_AND <- intersect(male_filt_genes[!male_filt_genes], female_filt_genes[!female_filt_genes])
+filt_genes_OR <- union(male_filt_genes[!male_filt_genes], female_filt_genes[!female_filt_genes])
+exp_genes=exp_genes[(male_filt_genes | female_filt_genes),]
+}
+#var.filt.males <- varFilter(exp_genes[,males],var.cutoff=0.25) # Default cutoff of 0.5 removes 50% of genes
+#var.filt.females <- varFilter(exp_genes[,females],var.cutoff=0.25)
+#var.filt <- intersect(rownames(var.filt.males), rownames(var.filt.females))
+exp_genes <- varFilter(exp_genes, var.cutoff=0.25)
+#genes_to_filter <- filt_genes_OR[!(filt_genes_OR%in%var.filt)]
+print(dim(exp_genes))
+#exp_genes <- exp_genes[var.filt%in%rownames(exp_genes),]
+exp_genes <- exp_genes[var.filt,]
+print(dim(exp_genes))
 
 if ( args$verbose ) { print(c("Num genes expressed above 10% quantile in >=1/3 of males and >=1/3 of females:",nrow(exp_genes))) }
 if ( args$verbose ) { print(c("Num of probes supporting genes expressed above 10% quantile in >=1/3 of males and =>=1/3 of females:",length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%rownames(exp_genes)]))) }
 
-file=paste(c("Robjects/exp_genes",args$cell_type,args$population,"Robj"),collapse=".")
-save(exp_genes,file=file)
+file=paste(c("exp_genes_ftest",args$cell_type,args$population,"Robj"),collapse=".")
+save(exp_genes,file=paste('/group/stranger-lab/immvar_data/',file,sep=''))
