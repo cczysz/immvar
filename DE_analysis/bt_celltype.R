@@ -1,17 +1,11 @@
 library(oligo)
 library(limma)
-library(ggplot2)
+#library(ggplot2)
 library(peer)
 
 # Populations: Caucasian, African-American, Asian
 # Cell types: CD14, CD4
 # Imported as "exp_genes": GxN matrix of normalized expression values
-LoadData <- function(population=population,cell.type=cell.type) {
-	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
-	file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
-	load(file=file.path)
-}
-
 RunPeer <- function(expression, k=20, covs) {
 	model = PEER()
 	
@@ -87,7 +81,7 @@ FTest <- function(fit, expr.residuals, sex) {
 	save(ftest.results,file=paste('/group/stranger-lab/immvar_data/',f.name,sep=""))
 }
 
-for (population in c("Caucasian","African-American","Asian")) {
+for (population in c("Caucasian")){ #,"African-American","Asian")) {
 	population <<- population
 	load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
 	
@@ -98,27 +92,25 @@ for (population in c("Caucasian","African-American","Asian")) {
 	cd4.phen <- phen[phen$CellType == cd4, ]
 
 	data.dir <- "/group/stranger-lab/immvar_data/"
-	cd4.res.file.name <- paste("residuals",cd4,population,"Robj",sep=".")
-	load(file = paste(data.dir,res.file.name,sep=""))
-	cd4.res <- expr.residuals
+	cd4.file.name <- paste("exp_genes_bt_cell",'CD4',population,"Robj",sep=".")
+	load(file = paste(data.dir,cd4.file.name,sep=""))
+	cd4.exp <- exp_genes
 
-	cd14.res.file.name <- paste("residuals",cd14,population,"Robj",sep=".")
-	load(file = paste(data.dir,cd14.res.file.name,sep=""))
-	cd14.res <- expr.residuals
+	cd14.file.name <- paste("exp_genes_bt_cell",'CD14',population,"Robj",sep=".")
+	load(file = paste(data.dir,cd14.file.name,sep=""))
+	cd14.exp <- exp_genes
 
-	cell.type <- c(rep(0, nrow(cd4.res)), rep(1, nrow(cd14.res)))
-
-	shared.genes <- intersect(rownames(cd4.res), rownames(cd14.res))
+	common.indiv <- intersect(colnames(cd14.exp), colnames(cd4.exp))
+	shared.genes <- intersect(rownames(cd4.exp), rownames(cd14.exp))
 	
-	all.exp <- numeric()
-	for (gene in shared.genes){
-		all.exp <- rbind(all.exp, cbind(cd4.res[gene, ], cd14.res[gene, ]))
-	}
-	eb.fit <- PerformDEAnalysis(all.exp, cell.type)
+	all.exp <- cbind(cd4.exp[shared.genes,common.indiv], cd14.exp[shared.genes,common.indiv])	
+	cell.type <- c(rep(0, length(common.indiv)), rep(1, length(common.indiv)))
 
-	fit.save.name <- paste("bt_cell_fit",population,"Robj",sep=".")
-	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
+	peer.factors <- RunPeer(all.exp, k=20, cell.type)
 	
+	exp.residuals <- apply(as.matrix(all.exp), 1, MakeResiduals, peer.factors=peer.factors)
+	#PerformDEAnalysis(exp.residuals, cell.type)
+
 	AnalyzeFit(eb.fit, all.exp, cell.type)
 	
 	#FTest(eb.fit, all.exp, cell.type)
