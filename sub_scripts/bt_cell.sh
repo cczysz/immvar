@@ -2,9 +2,9 @@
 
 #PBS -N czysz_de_bt
 #PBS -S /bin/bash
-#PBS -l walltime=30:00:00
+#PBS -l walltime=5:00:00
 #PBS -l nodes=1:ppn=4
-#PBS -l mem=16gb
+#PBS -l mem=14gb
 
 #PBS -o $HOME/
 #PBS -e $HOME/de_bt.err
