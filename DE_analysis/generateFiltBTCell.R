@@ -1,24 +1,25 @@
-#!/usr/bin/env Rscript
-
+# #!/home/t.cri.cczysz/bin/Rscript
+#!/apps/compilers/R/3.1.0/bin/Rscript
 ### load libraries
 
 library(genefilter)
 library(argparse)
 library(oligo)
+library(pd.hugene.1.0.st.v1)
 
 ### Import functions
 
-sapply(list.files(pattern="[.]R$", path="Rfuncs/", full.names=TRUE), source);
-
+#sapply(list.files(pattern="[.]R$", path="/group/stranger-lab/moliva/ImmVar/Rfuncs/", full.names=TRUE), source);
+source('/group/stranger-lab/immvar/DE_analysis/generate_exp_object.R')
 ### MANAGE ARGUMENTS
 
 parser=ArgumentParser()
 parser$add_argument("-p", "--population", type="character", default="Caucassian",
     help="Samples' population to filter [default %(default)s], options: Caucassian,African-American,Asian ",
     metavar="character")
-parser$add_argument("-c", "--cell_type", type="character", default="CD14",
-    help="Cell type to filter [default %(default)s], options: CD14, CD4",
-    metavar="character")
+#parser$add_argument("-c", "--cell_type", type="character", default="CD14",
+    #help="Cell type to filter [default %(default)s], options: CD14, CD4",
+    #metavar="character")
 parser$add_argument("-v", "--verbose", action="store_true", default=TRUE,
     help="Print extra output [default]")
 parser$add_argument("-q", "--quietly", action="store_false",
@@ -27,9 +28,9 @@ args <- parser$parse_args()
 if( !args$population%in%c("Caucasian","African-American","Asian")) {
 	stop("Population needs to be Caucasian African-American or Asian")
 }
-if( !args$cell_type%in%c("CD4","CD14")) {
-	stop("Cell type need to be either CD14 or CD4")
-}
+#if( !args$cell_type%in%c("CD4","CD14")) {
+	#stop("Cell type need to be either CD14 or CD4")
+#}
 
 ###### MAPPING BASED FILTERING
 setwd('/group/stranger-lab/moliva/ImmVar')
@@ -107,6 +108,7 @@ if ( args$verbose ) { print(c("Num probes after annotation based filtering:",len
 ### Background-correction, normalization of probe-level expression values.
 ### Step already done. Load Robj
 
+if (F) {
 file=paste(c("Robjects/oligo.bgSubstractedNormalized",args$cell_type,args$population,"Robj"),collapse=".");
 if (file.exists(file)) {
 	if ( args$verbose ) { print(paste(c("Load file",file),collapse="")) }
@@ -117,7 +119,11 @@ if (file.exists(file)) {
 	normalized2=backcorrect.normalize.probe.level(oligo_raw)
 	save(normalized2,file=file)
 }
+}
 
+oligo_raw=load.cel.files(args$population)
+normalized2=backcorrect.normalize.probe.level(oligo_raw)
+# save(normalized2,file=file)
 ### Eliminate filtered probes
 
 samples=as.character(pData(normalized2)$ImmVarID2)
@@ -158,16 +164,17 @@ dev.off()
 
 ###  Filter Y-linked non-PAR probes for which median expression in females is above threshold and distribution of expressions in male and females are equal (wilxon test pval > 10-5) in any cell type in any population
 
-file=paste(c("probes_mapping/annotations/",args$cell_type,args$population,"FiltProbeExp.txt"),collapse=".")
-file2=paste(c("probes_mapping/annotations/","all","FiltProbeExp.txt"),collapse=".")
+#file=paste(c("probes_mapping/annotations/",args$cell_type,args$population,"FiltProbeExp.txt"),collapse=".")
+#file2=paste(c("probes_mapping/annotations/","all","FiltProbeExp.txt"),collapse=".")
+if (F) {
 if (file.exists(file)) {
 	if (!file.exists(file2)) {
 		stop(paste(c("File ",file2," is missing. Create it."),collapse=""))
 	} else {
 		filt_Y_probe_exp=as.data.frame(read.table(file2))[,1];
 	}
-} else {
-
+} else {}
+}
 	median_genexp_females_probes=apply(log2(normalized2[,females]),1,median)
 	median_genexp_males_probes=apply(log2(normalized2[,males]),1,median)
 
@@ -182,9 +189,9 @@ if (file.exists(file)) {
 		}
 	}
 	filt_Y_probe_exp=unique(filt_Y_probe_exp)
-	write.table(filt_Y_probe_exp,file=file,quote = F,row.names = F,col.names = F)
-	stop(paste(c("File ",file2," is missing. Create it."),collapse=""))
-}
+	#write.table(filt_Y_probe_exp,file=file,quote = F,row.names = F,col.names = F)
+	#stop(paste(c("File ",file2," is missing. Create it."),collapse=""))
+
 if ( args$verbose ) { print(c("Num probes with inconsistent Y-linked non-PAR expression:",length(filt_Y_probe_exp))) }
 
 ### Filter probes below exp threshold
@@ -230,7 +237,7 @@ exp_genes=exp_genes[genes,];
 
 females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(females)/3))
 males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(males)/3))
-genes_above_threshold_index=genefilter(exp_genes[,males],filterfun(males_filt)) | genefilter(exp_genes[,females],filterfun(females_filt))
+genes_above_threshold_index=genefilter(exp_genes[,males],filterfun(males_filt)) & genefilter(exp_genes[,females],filterfun(females_filt))
 #print(dim(exp_genes))
 exp_genes=exp_genes[genes_above_threshold_index,]
 if (F) {
@@ -257,5 +264,5 @@ exp_genes=exp_genes[(male_filt_genes | female_filt_genes),]
 if ( args$verbose ) { print(c("Num genes expressed above 10% quantile in >=1/3 of males and >=1/3 of females:",nrow(exp_genes))) }
 if ( args$verbose ) { print(c("Num of probes supporting genes expressed above 10% quantile in >=1/3 of males and =>=1/3 of females:",length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%rownames(exp_genes)]))) }
 
-file=paste(c("exp_genes_bt_cell",args$cell_type,args$population,"Robj"),collapse=".")
-save(exp_genes,file=paste('/group/stranger-lab/immvar_data/',file,sep=''))
+#file=paste(c("exp_genes_bt_cell",args$cell_type,args$population,"Robj"),collapse=".")
+#save(exp_genes,file=paste('/group/stranger-lab/immvar_data/',file,sep=''))
