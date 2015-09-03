@@ -26,7 +26,7 @@ RunPeer <- function(expression, k=20, covs) {
 }
 
 MakeResiduals <- function(input.row,peer.factors) {
-	fit <- lm(input.row ~ peer.factors[, -1] - 1)
+	fit <- lm(input.row ~ peer.factors[, -1] )
 	residuals(fit)
 }
 
@@ -156,7 +156,7 @@ for (cell.type in c("CD14","CD4")) {
 	load(file = paste(data.dir,fit.file.name,sep=""))
 	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
 
-	if (F) {
+	if (T) {
 		file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
 		load(file=file.path)
 
@@ -167,7 +167,7 @@ for (cell.type in c("CD14","CD4")) {
 		expr.residuals <- t(expr.residuals)
 
 		save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
-		# save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+		save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
 	
 
 	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
