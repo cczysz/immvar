@@ -1,11 +1,12 @@
 library(oligo)
 library(limma)
-#library(ggplot2)
+library(ggplot2)
 library(peer)
 
 # Populations: Caucasian, African-American, Asian
 # Cell types: CD14, CD4
 # Imported as "exp_genes": GxN matrix of normalized expression values
+
 RunPeer <- function(expression, k=20, covs) {
 	model = PEER()
 	
@@ -29,14 +30,13 @@ PerformDEAnalysis <- function(expr,samples) {
 
 	fit <- lmFit(expr, design)
 
-	contrast.matrix <- makeContrasts(Male - Female, levels=design)
+	contrast.matrix <- makeContrasts(CD4 - CD14, levels=design)
 	contrast.fit <- contrasts.fit(fit, contrast.matrix)
 	eb.fit <- eBayes(contrast.fit, robust=T)
 }
 
 AnalyzeFit <- function(eb.fit, expr.residuals, type) {
 	top.de.genes <- row.names(topTable(eb.fit, number=Inf,p.value=0.05))
-	# load('/group/stranger-lab/moliva/ImmVar/probes_mapping/Robjects/merge_probes_DF.Robj')
 
 	save.path <- "/group/stranger-lab/czysz/ImmVar"
 	save.file.name <- paste("de_genes_bt", population, "txt", sep=".")
@@ -92,26 +92,17 @@ for (population in c("Caucasian")){ #,"African-American","Asian")) {
 	cd4.phen <- phen[phen$CellType == cd4, ]
 
 	data.dir <- "/group/stranger-lab/immvar_data/"
-	cd4.file.name <- paste("exp_genes_bt_cell",'CD4',population,"Robj",sep=".")
-	load(file = paste(data.dir,cd4.file.name,sep=""))
-	cd4.exp <- exp_genes
+	exp.file <- paste("exp_genes_bt_cell",population,"Robj",sep='.')
+	load(file=paste(data.dir,exp.file,sep=''))
+	cell.type <- c(rep(0, ncol(exp_genes)/2), rep(1, ncol(exp_genes)/2))
 
-	cd14.file.name <- paste("exp_genes_bt_cell",'CD14',population,"Robj",sep=".")
-	load(file = paste(data.dir,cd14.file.name,sep=""))
-	cd14.exp <- exp_genes
-
-	common.indiv <- intersect(colnames(cd14.exp), colnames(cd4.exp))
-	shared.genes <- intersect(rownames(cd4.exp), rownames(cd14.exp))
+	peer.factors <- RunPeer(exp_genes, k=20, cell.type)
 	
-	all.exp <- cbind(cd4.exp[shared.genes,common.indiv], cd14.exp[shared.genes,common.indiv])	
-	cell.type <- c(rep(0, length(common.indiv)), rep(1, length(common.indiv)))
+	exp.residuals <- apply(as.matrix(exp_genes), 1, MakeResiduals, peer.factors=peer.factors)
+	exp.residuals <- t(exp.residuals)
+	PerformDEAnalysis(exp.residuals, cell.type)
 
-	peer.factors <- RunPeer(all.exp, k=20, cell.type)
-	
-	exp.residuals <- apply(as.matrix(all.exp), 1, MakeResiduals, peer.factors=peer.factors)
-	#PerformDEAnalysis(exp.residuals, cell.type)
-
-	AnalyzeFit(eb.fit, all.exp, cell.type)
+	AnalyzeFit(eb.fit, exp_genes, cell.type)
 	
 	#FTest(eb.fit, all.exp, cell.type)
 }

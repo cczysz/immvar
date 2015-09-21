@@ -5,13 +5,18 @@
 load.cel.files <- function(population) {
 
 	load("Robjects/phen.Robj")
+	shared_ids <- names(table(phen$ImmVarID2)[table(phen$ImmVarID2)>1])
 
 	cell_type_markers="CD14+16-Mono";
-	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers,"FileName"])
+	#immvar_ids <- phen[phen$Race == population, "ImmVarID2"]
+	#shared_samples <- unique(immvar_ids[duplicated(immvar_ids)])
+	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,"FileName"])
+	#files_sufix=phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,"FileName"]
 	filenames.cd14=unlist(lapply(files_sufix,function(x) paste(c("data/mRNAexp/CEL_files","CD14",x),collapse="/")));
 
 	cell_type_markers="CD4TNve";
-	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers,"FileName"])
+	#files_sufix=phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,"FileName"]
+	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,"FileName"])
 	filenames.cd4=unlist(lapply(files_sufix,function(x) paste(c("data/mRNAexp/CEL_files","CD4",x),collapse="/")));
 
 	#raw_oligo=read.celfiles(filenames=c(filenames.cd14,filenames.cd4),phenoData=AnnotatedDataFrame(phen[phen$Race == population ,]))
@@ -48,6 +53,7 @@ parser$add_argument("-v", "--verbose", action="store_true", default=TRUE,
 parser$add_argument("-q", "--quietly", action="store_false",
     dest="verbose", help="Print NO output")
 args <- parser$parse_args()
+args <- list(population="Caucasian", verbose=F)
 if( !args$population%in%c("Caucasian","African-American","Asian")) {
 	stop("Population needs to be Caucasian African-American or Asian")
 }
@@ -57,10 +63,10 @@ if( !args$population%in%c("Caucasian","African-American","Asian")) {
 
 ###### MAPPING BASED FILTERING
 setwd('/group/stranger-lab/moliva/ImmVar')
-par.genes=as.character(read.table("probes_mapping/annotations/par.genes.txt")[,1])
-Y.degenerate=as.character(read.table("probes_mapping/annotations/chrY.degenerate.txt")[,1])
-Y.degenerate_Xhomolog=as.character(read.table("probes_mapping/annotations/chrY.degenerate_Xhomolog.txt")[,1])
-Y.all=as.character(read.table("probes_mapping/annotations/chrY.genes.txt")[,2])
+par.genes<<-as.character(read.table("probes_mapping/annotations/par.genes.txt")[,1])
+Y.degenerate<<-as.character(read.table("probes_mapping/annotations/chrY.degenerate.txt")[,1])
+Y.degenerate_Xhomolog<<-as.character(read.table("probes_mapping/annotations/chrY.degenerate_Xhomolog.txt")[,1])
+Y.all<<-as.character(read.table("probes_mapping/annotations/chrY.genes.txt")[,2])
 
 
 file="probes_mapping/Robjects/merge_probes_DF_lite.Robj";
@@ -155,40 +161,15 @@ normalized2=normalized2[as.character(merge_probes_DF_filt$probeId),]
 ### Previously, store ImmVarID2 for males and females on vectors of the same name
 
 load("Robjects/phen.Robj")
-#males=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Male","ImmVarID2"])]
-#females=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Female","ImmVarID2"])]
+phen <- phen[phen$Race == args$population,]
 cell.cd14 <- c(rep(1,ncol(normalized2)/2),rep(0,ncol(normalized2)/2))
 cell.cd4 <- c(rep(0,ncol(normalized2)/2),rep(1,ncol(normalized2)/2))
 
-if (F) {
-filepdf=paste(c('plots/distribution_exprs_probes',args$cell_type,args$population,'.pdf'),collapse=".")
-if(!file.exists(filepdf)) {
-pdf(filepdf)
-hist(log2(normalized2[,males]),prob=T) }
-dM <- density(log2(normalized2[,males]))
-min_males=optimize(approxfun(dM$x,dM$y),interval=c(3,4))$minimum
-if(!file.exists(filepdf)) {
-abline(v=min_males)
-lines(dM)
-legend("topright",legend=paste(c("min f(x) = ",min_males,collapse="")))
-
-hist(log2(normalized2[,females]),prob=T)
-}
-dF <- density(log2(normalized2[,females]))
-min_females=optimize(approxfun(dF$x,dF$y),interval=c(3,4))$minimum
-if(!file.exists(filepdf)) {
-abline(v=min_females)
-lines(dF)
-legend("topright",legend=paste(c("min f(x) = ",min_females,collapse="")))
-dev.off()
-}
-}
-
 dCD14 <- density(log2(normalized2[,cell.cd14]))
-min_cd14=optimize(approxfun(dM$x,dM$y),interval=c(3,4))$minimum
+min_cd14=optimize(approxfun(dCD14$x,dCD14$y),interval=c(3,4))$minimum
 
 dCD4 <- density(log2(normalized2[,cell.cd4]))
-min_cd4=optimize(approxfun(dF$x,dF$y),interval=c(3,4))$minimum
+min_cd4=optimize(approxfun(dCD4$x,dCD4$y),interval=c(3,4))$minimum
 
 ###  Filter Y-linked non-PAR probes for which median expression in females is above threshold and distribution of expressions in male and females are equal (wilxon test pval > 10-5) in any cell type in any population
 
@@ -197,51 +178,30 @@ min_cd4=optimize(approxfun(dF$x,dF$y),interval=c(3,4))$minimum
 file2=paste(c("probes_mapping/annotations/","all","FiltProbeExp.txt"),collapse=".")
 filt_Y_probe_exp=as.data.frame(read.table(file2))[,1];
 
-median_genexp_cd14_probes=apply(log2(normalized2[,cell.cd14]),1,median)
-median_genexp_cd4_probes=apply(log2(normalized2[,cell.cd4]),1,median)
+FilterYProbes <- function(exp, sex, merge_probes_DF_filt) {
+	filt_Y_probe=vector()
+	d.exp <- density(log2(exp[,cell]))
+	min_exp=optimize(approxfun(d.exp$x,d.exp$y),interval=c(3,4))$minimum
 
-filt_Y_probe_cd14=vector()
-for (gene in unique(as.character(merge_probes_DF_filt[merge_probes_DF_filt$gene_ensembl%in%Y.all[!Y.all%in%par.genes],"gene_ensembl"]))) {
-	probes=as.character(merge_probes_DF_filt[grep(gene,merge_probes_DF_filt$gene_ensembl),"probeId"]);
-	for (probe in probes) {
-		pval=wilcox.test(log2(normalized2[probe,females]),log2(normalized2[probe,males]))$p.value
-		if (pval > 0.00001 && median_genexp_females_probes[probe] > min_females) {
-		filt_Y_probe_cd14=c(filt_Y_probe_cd14,probe)
+	median_genexp_males=apply(log2(exp[,!!sex]),1,median)
+	median_genexp_females=apply(log2(exp[,!sex]),1,median)
+
+	for (gene in unique(as.character(merge_probes_DF_filt[merge_probes_DF_filt$gene_ensembl%in%Y.all[!Y.all%in%par.genes],"gene_ensembl"]))) {
+		probes=as.character(merge_probes_DF_filt[grep(gene,merge_probes_DF_filt$gene_ensembl),"probeId"]);
+		for (probe in probes) {
+			pval=wilcox.test(log2(exp[probe,!!sex]),log2(exp[probe,!sex]))$p.value
+			if (pval > 0.00001 && median_genexp_females_probes[probe] > min_females) {
+			filt_Y_probe=c(filt_Y_probe,probe)
+			}
 		}
 	}
+
+	filt_Y_probe=unique(filt_Y_probe)
+	return(filt_Y_probe)
 }
 
-filt_Y_probe_cd14=unique(filt_Y_probe_cd14)
-
-filt_Y_probe_cd4=vector()
-for (gene in unique(as.character(merge_probes_DF_filt[merge_probes_DF_filt$gene_ensembl%in%Y.all[!Y.all%in%par.genes],"gene_ensembl"]))) {
-	probes=as.character(merge_probes_DF_filt[grep(gene,merge_probes_DF_filt$gene_ensembl),"probeId"]);
-	for (probe in probes) {
-		pval=wilcox.test(log2(normalized2[probe,females]),log2(normalized2[probe,males]))$p.value
-		if (pval > 0.00001 && median_genexp_females_probes[probe] > min_females) {
-		filt_Y_probe_cd4=c(filt_Y_probe_cd4,probe)
-		}
-	}
-}
-
-filt_Y_probe_cd4=unique(filt_Y_probe_cd4)
-
-if ( args$verbose ) { print(c("Num probes with inconsistent Y-linked non-PAR expression:",length(filt_Y_probe_exp))) }
-
-### Filter probes below exp threshold
-
-filt_probe_min_exp=vector()
-for (gene in unique(as.character(merge_probes_DF_filt$gene_ensembl))) {
-        probes=as.character(merge_probes_DF_filt[grep(gene,merge_probes_DF_filt$gene_ensembl),"probeId"]);
-        for (probe in probes) {
-                if (median_genexp_males_probes[probe] < min_males && median_genexp_females_probes[probe] < min_females) {
-                        filt_probe_min_exp=c(filt_probe_min_exp,probe)
-                }
-        }
-}
-#length(filt_probe_min_exp)
-
-filt_probes=c(filt_Y_probe_exp,filt_probe_min_exp)
+#filt_Y_probes_CD4 <- FilterYProbes(exp, sex, merge_probes_DF_filt)
+#filt_probes=c(filt_Y_probe_exp,filt_probe_min_exp)
 filt_probes=as.character(c(filt_Y_probe_exp))
 
 merge_probes_DF_filt=merge_probes_DF_filt[!as.character(merge_probes_DF_filt$probeId)%in%filt_probes,]
@@ -267,14 +227,14 @@ if ( args$verbose ) { print(c("Num genes after min number of probes (>=5) filter
 if ( args$verbose ) { print(c("Num probes supporting genes with min number of probes (>=7):",length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%genes]))) }
 exp_genes=exp_genes[genes,];
 
-### Filter genes expressed below 10% quantile in >2/3 of males and >2/3 of females
 
+### Filter genes expressed below 10% quantile in >2/3 of males and >2/3 of females
+if (F) {
 females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(females)/3))
 males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(males)/3))
 genes_above_threshold_index=genefilter(exp_genes[,males],filterfun(males_filt)) & genefilter(exp_genes[,females],filterfun(females_filt))
 #print(dim(exp_genes))
 exp_genes=exp_genes[genes_above_threshold_index,]
-if (F) {
 females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(females))/3)
 males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(males))/3)
 
@@ -295,50 +255,8 @@ exp_genes=exp_genes[(male_filt_genes | female_filt_genes),]
 #exp_genes <- exp_genes[var.filt,]
 #print(dim(exp_genes))
 
-if ( args$verbose ) { print(c("Num genes expressed above 10% quantile in >=1/3 of males and >=1/3 of females:",nrow(exp_genes))) }
-if ( args$verbose ) { print(c("Num of probes supporting genes expressed above 10% quantile in >=1/3 of males and =>=1/3 of females:",length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%rownames(exp_genes)]))) }
+#if ( args$verbose ) { print(c("Num genes expressed above 10% quantile in >=1/3 of males and >=1/3 of females:",nrow(exp_genes))) }
+#if ( args$verbose ) { print(c("Num of probes supporting genes expressed above 10% quantile in >=1/3 of males and =>=1/3 of females:",length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%rownames(exp_genes)]))) }
 
-#file=paste(c("exp_genes_bt_cell",args$cell_type,args$population,"Robj"),collapse=".")
-#save(exp_genes,file=paste('/group/stranger-lab/immvar_data/',file,sep=''))
-load.cel.files <- function(population) {
-
-	library(oligo)
-	load("Robjects/phen.Robj")
-
-if (F) {
-	if ( cell_type == "CD14" ) {
-		
-		## Load EUR CD14 CEL files
-		cell_type_markers="CD14+16-Mono";
-	} 
-	else if ( cell_type == "CD4" ) {
-		## Load EUR CD4 CEL files
-		cell_type_markers="CD4TNve";
-	} 
-	else {
-		stop("Cell type needs to be CD14 or CD4")
-	}
-	if ( !population%in%c("Caucasian","African-American","Asian") ) {
-		stop("Population needs to be Caucasian African-American or Asian")
-	}
-}
-	cell_type_markers="CD14+16-Mono";
-	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers,"FileName"])
-	filenames.cd14=unlist(lapply(files_sufix,function(x) paste(c("data/mRNAexp/CEL_files","CD14",x),collapse="/")));
-
-	cell_type_markers="CD4TNve";
-	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers,"FileName"])
-	filenames.cd4=unlist(lapply(files_sufix,function(x) paste(c("data/mRNAexp/CEL_files","CD4",x),collapse="/")));
-
-	#raw_oligo=read.celfiles(filenames=c(filenames.cd14,filenames.cd4),phenoData=AnnotatedDataFrame(phen[phen$Race == population ,]))
-	raw_oligo=read.celfiles(filenames=c(filenames.cd14,filenames.cd4))
-	return(raw_oligo)
-}
-
-backcorrect.normalize.probe.level <- function(ExpressionFeatureSet) {
-
-	library(oligo)
-	bgCorrected <- backgroundCorrect(ExpressionFeatureSet);
-	normalized2 <- normalize(bgCorrected, method="quantile");
-	return(normalized2);
-}
+file=paste(c("exp_genes_bt_cell",args$population,"Robj"),collapse=".")
+save(exp_genes,file=paste('/group/stranger-lab/immvar_data/',file,sep=''))
