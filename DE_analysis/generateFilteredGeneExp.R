@@ -3,16 +3,17 @@
 ### load libraries
 
 library(genefilter)
-#library(argparse)
+library(argparse)
 library(oligo)
 
 ### Import functions
-setwd('/group/stranger-lab/moliva/ImmVar')
-sapply(list.files(pattern="[.]R$", path="Rfuncs/", full.names=TRUE), source);
+#setwd('/group/stranger-lab/moliva/ImmVar')
+#sapply(list.files(pattern="[.]R$", path="Rfuncs/", full.names=TRUE), source);
+
+source('/group/stranger-lab/immvar/DE_analysis/generate_exp_object.R')
 
 ### MANAGE ARGUMENTS
 
-if (F) {
 parser=ArgumentParser()
 parser$add_argument("-p", "--population", type="character", default="Caucassian",
     help="Samples' population to filter [default %(default)s], options: Caucassian,African-American,Asian ",
@@ -31,8 +32,7 @@ if( !args$population%in%c("Caucasian","African-American","Asian")) {
 if( !args$cell_type%in%c("CD4","CD14")) {
 	stop("Cell type need to be either CD14 or CD4")
 }
-}
-args <- list(population="Caucasian",cell_type="CD14",verbose=FALSE)
+#args <- list(population="Caucasian",cell_type="CD14",verbose=FALSE)
 ###### MAPPING BASED FILTERING
 setwd('/group/stranger-lab/moliva/ImmVar')
 par.genes=as.character(read.table("probes_mapping/annotations/par.genes.txt")[,1])
@@ -109,6 +109,7 @@ if ( args$verbose ) { print(c("Num probes after annotation based filtering:",len
 ### Background-correction, normalization of probe-level expression values.
 ### Step already done. Load Robj
 
+if (F) {
 file=paste(c("Robjects/oligo.bgSubstractedNormalized",args$cell_type,args$population,"Robj"),collapse=".");
 if (file.exists(file)) {
 	if ( args$verbose ) { print(paste(c("Load file",file),collapse="")) }
@@ -119,7 +120,9 @@ if (file.exists(file)) {
 	normalized2=backcorrect.normalize.probe.level(oligo_raw)
 	save(normalized2,file=file)
 }
-
+}
+oligo_raw=load.cel.files(args$population,args$cell_type)
+normalized2=backcorrect.normalize.probe.level(oligo_raw)
 ### Eliminate filtered probes
 
 samples=as.character(pData(normalized2)$ImmVarID2)
@@ -230,12 +233,13 @@ exp_genes=exp_genes[genes,];
 
 ### Filter genes expressed below 10% quantile in >2/3 of males and >2/3 of females
 
-females_filt=kOverA(A=quantile(exp_genes,probs = 0.5),k = round(length(females)/3))
-males_filt=kOverA(A=quantile(exp_genes,probs = 0.5),k = round(length(males)/3))
+females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(females)/3))
+males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(males)/3))
 genes_above_threshold_index=genefilter(exp_genes[,males],filterfun(males_filt)) | genefilter(exp_genes[,females],filterfun(females_filt))
 print(dim(exp_genes))
 exp_genes=exp_genes[genes_above_threshold_index,]
 print(dim(exp_genes))
+
 if (F) {
 females_filt=kOverA(A=quantile(exp_genes[,females],probs = 0.1),k = round(length(females))/3)
 males_filt=kOverA(A=quantile(exp_genes[,males],probs = 0.1),k = round(length(males))/3)
@@ -260,5 +264,5 @@ exp_genes=exp_genes[(male_filt_genes | female_filt_genes),]
 if ( args$verbose ) { print(c("Num genes expressed above 10% quantile in >=1/3 of males and >=1/3 of females:",nrow(exp_genes))) }
 if ( args$verbose ) { print(c("Num of probes supporting genes expressed above 10% quantile in >=1/3 of males and =>=1/3 of females:",length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%rownames(exp_genes)]))) }
 
-file=paste(c("exp_genes_bt_cell",args$cell_type,args$population,"Robj"),collapse=".")
+file=paste(c("exp_genes_intersect",args$cell_type,args$population,"Robj"),collapse=".")
 save(exp_genes,file=paste('/group/stranger-lab/immvar_data/',file,sep=''))
