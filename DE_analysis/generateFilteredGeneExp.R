@@ -233,12 +233,14 @@ exp_genes=exp_genes[genes,];
 
 ### Filter genes expressed below 10% quantile in >2/3 of males and >2/3 of females
 
+if (F) {
 females_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(females)/3))
 males_filt=kOverA(A=quantile(exp_genes,probs = 0.1),k = round(length(males)/3))
 genes_above_threshold_index=genefilter(exp_genes[,males],filterfun(males_filt)) | genefilter(exp_genes[,females],filterfun(females_filt))
 print(dim(exp_genes))
 exp_genes=exp_genes[genes_above_threshold_index,]
 print(dim(exp_genes))
+}
 
 if (F) {
 females_filt=kOverA(A=quantile(exp_genes[,females],probs = 0.1),k = round(length(females))/3)

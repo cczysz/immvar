@@ -1,4 +1,3 @@
-# #!/home/t.cri.cczysz/bin/Rscript
 #!/apps/compilers/R/3.1.0/bin/Rscript
 ### load libraries
 
@@ -20,7 +19,7 @@ load.cel.files <- function(population) {
 	filenames.cd4=unlist(lapply(files_sufix,function(x) paste(c("data/mRNAexp/CEL_files","CD4",x),collapse="/")));
 
 	#raw_oligo=read.celfiles(filenames=c(filenames.cd14,filenames.cd4),phenoData=AnnotatedDataFrame(phen[phen$Race == population ,]))
-	raw_oligo=read.celfiles(filenames=c(filenames.cd14,filenames.cd4))
+	raw_oligo=read.celfiles(filenames=c(filenames.cd14,filenames.cd4),phenoData=AnnotatedDataFrame(phen[phen$Race==population & phen$ImmVarID2%in%shared_ids,]))
 	return(raw_oligo)
 }
 
@@ -178,7 +177,7 @@ min_cd4=optimize(approxfun(dCD4$x,dCD4$y),interval=c(3,4))$minimum
 file2=paste(c("probes_mapping/annotations/","all","FiltProbeExp.txt"),collapse=".")
 filt_Y_probe_exp=as.data.frame(read.table(file2))[,1];
 
-FilterYProbes <- function(exp, sex, merge_probes_DF_filt) {
+FilterYProbes <- function(exp, population, merge_probes_DF_filt) {
 	filt_Y_probe=vector()
 	d.exp <- density(log2(exp[,cell]))
 	min_exp=optimize(approxfun(d.exp$x,d.exp$y),interval=c(3,4))$minimum
