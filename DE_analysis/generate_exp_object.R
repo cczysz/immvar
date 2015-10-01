@@ -19,11 +19,11 @@ load.cel.files <- function(population,cell_type) {
 		stop("Population needs to be Caucasian African-American or Asian")
 	}
 	shared_ids <- names(table(phen$ImmVarID2)[table(phen$ImmVarID2)>1])
-	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,"FileName"])
-	#files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers,"FileName"])
+	#files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,"FileName"])
+	files_sufix=as.character(phen[phen$Race == population & phen$CellType == cell_type_markers,"FileName"])
 	filenames=unlist(lapply(files_sufix,function(x) paste(c("data/mRNAexp/CEL_files",cell_type,x),collapse="/")));
-	#raw_oligo=read.celfiles(filenames=filenames,phenoData=AnnotatedDataFrame(phen[phen$Race == population & phen$CellType == cell_type_markers,]))
-	raw_oligo=read.celfiles(filenames=filenames,phenoData=AnnotatedDataFrame(phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,]))
+	raw_oligo=read.celfiles(filenames=filenames,phenoData=AnnotatedDataFrame(phen[phen$Race == population & phen$CellType == cell_type_markers,]))
+	#raw_oligo=read.celfiles(filenames=filenames,phenoData=AnnotatedDataFrame(phen[phen$Race == population & phen$CellType == cell_type_markers & phen$ImmVarID2%in%shared_ids,]))
 	return(raw_oligo)
 }
 
