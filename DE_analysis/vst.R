@@ -47,14 +47,19 @@ shared.genes <- intersect(intersect(names(vst.list[[1]]), names(vst.list[[2]])),
 
 for (i in seq(3)) { vst.list[[i]] <- vst.list[[i]][shared.genes] }
 
-vst.list[[1]] <- vst.list[[1]]^2
-vst.list[[2]] <- vst.list[[2]]^2
-vst.list[[3]] <- vst.list[[3]]^2
-
 top.diff.genes <- c()
 for ( i in seq(3)) {
 	top.diff <- vst.list[[i]][vst.list[[i]] > quantile(vst.list[[i]], probs=c(0.99))]
 	top.diff.genes <- c(top.diff.genes, names(top.diff))	
 }
 
-#top.diff.genes <- names(top.diff.genes[table(top.diff.genes) == 3])
+annot <- read.table(file='/group/stranger-lab/moliva/ImmVar/probes_mapping/annotations/gencode.v22.TSS.txt',header=T,row.names=1,as.is=T)
+cd14.rep <- c("UTS2","FLNB","SPTBN1","SMAGP","EMP1","TTC39C","PSPH","SPATA20","PPIL3","F2RL1","LRRC6","RFX2","LMNA","P2RX5","PRH1","SIGLEC14","GATM","LILRA3")
+rep_geneid <- annot[annot$symbol_id%in%cd14.rep,]
+
+cd4.rep <- c("UTS2","CRIP2","NR1D1","C11orf21","VIM","TRPM2","TMEM14C","RPL36AL","PTCH1","HOXB2","HEBP2","GPR137B","AFAP1","CCDC144A","FHIT","PPFIBP2","GSTM4")
+
+ all <- cbind(vst.list[[1]][names(vst.list[[1]])%in%rownames(rep_geneid)],vst.list[[2]][names(vst.list[[2]])%in%rownames(rep_geneid)],vst.list[[3]][names(vst.list[[3]])%in%rownames(rep_geneid)])
+colnames(all) <- c("EU-AA","EU-EA","AA-EA")
+
+write.table(cbind(rep_geneid$symbol_id,all),file='/home/t.cri.cczysz/vst.rep.txt',quote=F)
