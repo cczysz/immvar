@@ -30,10 +30,35 @@ pairwiseVst <- function(exp1, exp2) {
 	return(x)
 }
 
+library(oligo)
+library(GEOquery)
+
 setwd('/group/stranger-lab/immvar_data/')
 
-exp.cd14 <- importExp("CD14")
-exp.cd4 <- importExp("CD4")
+#exp.cd14 <- importExp("CD14")
+#exp.cd4 <- importExp("CD4")
+
+load('/group/stranger-lab/immvar_rep/GSE56034.Robj')
+eset <- exprs(gse56034[[1]])
+pdat <- pData(gse56034[[1]]) # Population not given. Must overlap with phen
+load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
+
+phen.cd14 <<- phen[phen$PhenotypeMarkers=="CD3- CD14+ CD16-",]
+
+geo_ids <- as.character(pdat$title)
+split_ids <- strsplit(geo_ids,split="[.]")
+geo_ids <- c()
+for (i in seq(length(split_ids))) {
+	id <- split_ids[[i]][1]
+	geo_ids <- c(geo_ids,id)
+}
+
+convertIDs <- function(id) { 
+	race <- as.character(phen.cd14[phen.cd14$ImmVarID2==id,]$Race)
+	return(race)
+}
+race <- apply(as.matrix(geo_ids),1,convertIDs)
+#race <- as.character(race)
 
 vst.list <- list()
 for (i in seq(2)) {
