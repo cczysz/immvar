@@ -1,7 +1,7 @@
-#library(oligo)
+library(oligo)
 library(limma)
 #library(ggplot2)
-#library(peer)
+library(peer)
 library(genefilter)
 
 # Populations: Caucasian, African-American, Asian
@@ -134,7 +134,7 @@ FTest <- function(fit, exp_genes, expr.residuals, sex) {
 	
 }
 
-for (population in c("Caucasian","African-American","Asian")) {
+for (population in c("Caucasian")) { #,"African-American","Asian")) {
 for (cell.type in c("CD14","CD4")) {
 	population <<- population
 	cell.type <<- cell.type
@@ -147,18 +147,28 @@ for (cell.type in c("CD14","CD4")) {
 
 	#data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
 	#load(file=paste(data.dir,paste("exp_genes",cell.type,population,"Robj",sep="."),sep=""))
-
+	
+	if (F) {
 	data.dir <- "/group/stranger-lab/immvar_data/"
 	load(file=paste(data.dir,paste("exp_genes_ftest",cell.type,population,"Robj",sep="."),sep=""))
 	res.file.name <- paste("residuals",cell.type,population,"Robj",sep=".")
 	load(file = paste(data.dir,res.file.name,sep=""))
 	fit.file.name <- paste("fit",cell.type,population,"Robj",sep=".")
 	load(file = paste(data.dir,fit.file.name,sep=""))
+	}
+	
 	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
+	data.dir <- "/group/stranger-lab/czysz/ImmVar/apt_datasets/"
+	if (cell.type == "CD14") { 
+		file.n <- paste(data.dir,"cd14_cau_kill.txt", sep='')
+	} else { 
+		file.n <- paste(data.dir,"cd4_cau_kill.txt", sep='')
+	}
+	exp_genes <- as.matrix(read.table(file=file.n, header=T, row.names=1))
 
 	if (T) {
-		file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
-		load(file=file.path)
+		#file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
+		#load(file=file.path)
 
 		sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
 		peer.factors <- RunPeer(exp_genes,k=20,sex)
@@ -173,12 +183,12 @@ for (cell.type in c("CD14","CD4")) {
 	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
 
 	fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
-	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
+	#save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
 	}
 
-	#AnalyzeFit(eb.fit, expr.residuals, sex)
+	AnalyzeFit(eb.fit, expr.residuals, sex)
 	
-	FTest(eb.fit,exp_genes,expr.residuals, sex)
+	#FTest(eb.fit,exp_genes,expr.residuals, sex)
 
 	}
 }
