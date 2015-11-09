@@ -10,24 +10,25 @@ f_in <- paste('fit', pop, cell, 'Robj', sep='.')
 load(file=f_in)
 
 if (cell == 'CD14') { 
-	ttable<-topTable(cd14.eb.fit, number=Inf)
-	sig<-topTable(cd14.eb.fit, number=Inf, p.value=0.05)
+	ttable<-topTable(eb.fit, number=Inf)
+	sig<-topTable(eb.fit, number=Inf, p.value=0.05)
 	n<-nrow(cd14.eb.fit$design)
 	n_genes<-nrow(ttable) } 
 else {
-	ttable<-topTable(cd4.eb.fit, number=Inf) 
-	sig<-topTable(cd4.eb.fit, number=Inf, p.value=0.05)
+	ttable<-topTable(eb.fit, number=Inf) 
+	sig<-topTable(eb.fit, number=Inf, p.value=0.05)
 	n<-nrow(cd4.eb.fit$design)
 	n_genes<-nrow(ttable)
 }
 
-out_matrix <- matrix(c(GENES=rownames(ttable),
+out_matrix <- matrix(
+	c(GENES=rownames(ttable),
 	REF=rep('G', times=n_genes),
 	ALT=rep('A', times=n_genes), 
 	STRAND=rep('+', times=n_genes), 
 	EFFECT=ttable$logFC,
 	PVALUE=ttable$P.Value, 
-	N=rep(n_genes, times=n_genes)),
+	N=eb.fit$N,
 	ncol=7)
 colnames(out_matrix) <- c('GENES', 'REF', 'ALT', 'STRAND', 'EFFECT', 'PVALUE', 'N')
 
