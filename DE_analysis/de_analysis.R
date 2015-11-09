@@ -1,7 +1,7 @@
 library(oligo)
 library(limma)
 #library(ggplot2)
-library(peer)
+library(sva)
 library(genefilter)
 
 # Populations: Caucasian, African-American, Asian
@@ -31,14 +31,18 @@ MakeResiduals <- function(input.row,peer.factors) {
 }
 
 PerformDEAnalysis <- function(expr,samples) {
-	design <- model.matrix(~ as.factor(samples)-1)
-	colnames(design) <- c("Female","Male")
+	mod = model.matrix(~0+as.factor(samples))
+        colnames(mod) <- c('Female', 'Male')
+        mod0 = model.matrix(~0+rep(1,ncol(expr)))
 
-	fit <- lmFit(expr, design)
+        svobj <- sva(expr, mod, mod0)
+        modSv <- cbind(mod, svobj$sv)
 
-	contrast.matrix <- makeContrasts(Male - Female, levels=design)
-	contrast.fit <- contrasts.fit(fit, contrast.matrix)
-	eb.fit <- eBayes(contrast.fit, robust=T)
+        fit <- lmFit(expr, modSv)
+        contrast.matrix <- c(-1,1,rep(0, svobj$n.sv))
+        contrast.fit <- contrasts.fit(fit, contrast.matrix)
+        fit <- eBayes(contrast.fit)
+	return(fit)
 }
 
 AnalyzeFit <- function(eb.fit, expr.residuals, sex) {
@@ -134,7 +138,7 @@ FTest <- function(fit, exp_genes, expr.residuals, sex) {
 	
 }
 
-for (population in c("Caucasian")) { #,"African-American","Asian")) {
+for (population in c("Caucasian","African-American","Asian")) {
 for (cell.type in c("CD14","CD4")) {
 	population <<- population
 	cell.type <<- cell.type
@@ -145,8 +149,8 @@ for (cell.type in c("CD14","CD4")) {
 
 	phen <- phen[phen$CellType == phen.cell.type, ]
 
-	#data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
-	#load(file=paste(data.dir,paste("exp_genes",cell.type,population,"Robj",sep="."),sep=""))
+	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
+	load(file=paste(data.dir,paste("exp_genes",cell.type,population,"Robj",sep="."),sep=""))
 	
 	if (F) {
 	data.dir <- "/group/stranger-lab/immvar_data/"
@@ -171,22 +175,21 @@ for (cell.type in c("CD14","CD4")) {
 		#load(file=file.path)
 
 		sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
-		peer.factors <- RunPeer(exp_genes,k=20,sex)
+		#peer.factors <- RunPeer(exp_genes,k=20,sex)
 
-		expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
-		expr.residuals <- t(expr.residuals)
+		#expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
+		#expr.residuals <- t(expr.residuals)
 
-		save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
-		save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
+		#save.file.name <- paste("de_genes",cell.type,population,"txt",sep=".")
+		#save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
 	
-
-	eb.fit <- PerformDEAnalysis(expr.residuals, sex)
-
-	fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
-	#save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
 	}
+	eb.fit <- PerformDEAnalysis(exp_genes, sex)
+	eb.fit$N <- rep(ncol(exp_genes), nrow(eb.fit))
+	fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
+	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
 
-	AnalyzeFit(eb.fit, expr.residuals, sex)
+	AnalyzeFit(eb.fit, exp_genes, sex)
 	
 	#FTest(eb.fit,exp_genes,expr.residuals, sex)
 
