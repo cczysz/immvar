@@ -8,13 +8,13 @@ library(massiR)
 library(oligo)
 
 setwd('/group/stranger-lab/immvar_rep/GSE56580')
-# Set to true if Robj needs to be replaced
 if (!file.exists('norm_data.Robj')) {
 	dat <- lumiR('non_norm.txt', 
 		lib.mapping = 'lumiHumanIDMapping',
 		columnNameGrepPattern=list(detection="detectionPval", exprs="intensity"))
 
-	dat.N.T <- lumiExpresso(dat, bg.correct=F,
+	dat.N.T <- lumiExpresso(dat, bg.correct=F, 
+		variance.stabilize=F,
 		varianceStabilize.param = list(method='log2'), 
 		normalize.param=list(method='quantile'))
 	save(dat.N.T, file='norm_data.Robj')
@@ -78,18 +78,37 @@ fitData <- function(exprn, covs) {
 	return(fit)
 }
 
+fdat <- fData(dat.N.T)
+
 sample.results <- predictSex(as.matrix(selDataMatrix))
 
 selDataMatrix <- as.matrix(selDataMatrix)
 
-# Filter lowly expressed genes
-f1 <- pOverA(p=0.3, A=quantile(as.numeric(selDataMatrix), probes=c(0.1)))
-ffun <- filterfun(f1)
-filtered.genes <- genefilter(selDataMatrix, ffun)
-selDataMatrix <- selDataMatrix[filtered.genes, ]
+nuIDs <- rownames(selDataMatrix)
+geneNames <- getSYMBOL(rownames(selDataMatrix), 'lumiHumanAll.db')
+
+filt.probes <- read.table(file='/group/stranger-lab/moliva/ImmVar/replication_datasets/mappings/HumanHT-12v4/HumanHT-12v4.probe2gene.filt.tsv', header=F, col.names=c('ProbeID', 'EnsemblID'))
+x <- c()
+for (id in filt.probes$ProbeID) {
+	nuid <- as.character(rownames(fdat)[fdat$ID_REF==id])
+	if (length(nuid) == 0) { x <- c(x, NA) 
+
+	} else {x <- c(x, as.character(rownames(fdat)[fdat$ID_REF==id])) }
+}
+filt.probes$NuID <- x
+rm(x)
 
 geneNames <- getSYMBOL(rownames(selDataMatrix), 'lumiHumanAll.db')
-exp.summarized <- basicRMA(selDataMatrix, geneNames, F, F)
+#selDataMatrix <- selDataMatrix[rownames(selDataMatrix)%in%filt.probes$NuID,]
+
+tempMat <- NULL
+ensIDs <- c()
+for (gene in unique(filt.probes$EnsemblID)) {
+	info <- filt.probes[filt.probes$EnsemblID==gene,]
+	tempMat <- rbind(tempMat, selDataMatrix[rownames(selDataMatrix)%in%info$NuID,])
+	ensIDs <- c(ensIDs, rep(gene, sum(rownames(selDataMatrix)%in%info$NuID)))
+}
+exp.summarized <- basicRMA(tempMat, ensIDs, F, F)
 sample.factors <- as.numeric(sample.results$sex=="male")
 
 fit <- fitData(exp.summarized, sample.factors)

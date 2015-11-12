@@ -7,12 +7,14 @@ library(sva)
 library(massiR)
 library(preprocessCore)
 library(oligo)
+library(annotate)
 
 setwd('/group/stranger-lab/immvar_rep/GenCord')
 importRawData <- function() {
 	dat <- lumiR('GSE17080_unnormalized_T-cells.txt', 
 	lib.mapping = 'lumiHumanIDMapping',
 	columnNameGrepPattern=list(detection=NA, beadNum=NA))
+	fdat <<- fData(dat)	
 	dat.exp <- exprs(dat)
 
 	ids<-c()
@@ -33,7 +35,7 @@ importRawData <- function() {
 		dat.N <- cbind(dat.N, expr.mean)
 	}
 	dat.N <- as.matrix(dat.N)
-	dat.N.T <- log2(normalize.quantiles(dat.N))
+	dat.N.T <- normalize.quantiles(dat.N)
 	colnames(dat.N.T) <- unique(ids)
 	rownames(dat.N.T) <- rownames(dat.exp)
 	save(dat.N.T, file='norm_data.Robj')
@@ -79,20 +81,66 @@ fitData <- function(exprn, covs) {
 	return(fit)
 }
 
+if (F) {
 if (!file.exists('norm_data.Robj')) { dat.N.T <- importRawData() 
 } else { load('norm_data.Robj') }
-
-# QC Plots
-selDataMatrix <- dat.N.T
-probeList <- rownames(selDataMatrix)
-if (require(lumiHumanAll.db) & require(annotate)) {
-	selDataMatrix <- selDataMatrix[!is.na(getSYMBOL(rownames(selDataMatrix), 'lumiHumanAll.db')), ]
-	geneSymbol <- getSYMBOL(probeList, 'lumiHumanAll.db')
 }
 
-sample.results <- predictSex(as.matrix(selDataMatrix))
+dat.N.T <- importRawData()
+print(paste("Number of probes (raw data): ", nrow(dat.N.T), sep=''))
+
+fdat <- data.frame(nuID=rownames(fdat), row.names=fdat$ProbeID)
+# QC Plots
+selDataMatrix <- dat.N.T
 geneNames <- getSYMBOL(rownames(selDataMatrix), 'lumiHumanAll.db')
-exp.summarized <- summarize(selDataMatrix, probes=as.character(geneNames))
+sample.results <- predictSex(as.matrix(selDataMatrix))
+probeList <- rownames(selDataMatrix)
+
+# Import probes passing mapping criteria
+filt.probe2gene <- read.table(file='/group/stranger-lab/moliva/ImmVar/replication_datasets/mappings/HumanHT-12v3/HumanHT-12v3.probe2gene.filt.tsv', header=F, col.names=c('ProbeID', 'EnsemblID'))
+
+# Add conversion to nuID
+nuids <- c()
+for (id in filt.probe2gene$ProbeID) {
+	nuids<-c(nuids, as.character(fdat[id,]))
+}
+filt.probe2gene <- cbind(filt.probe2gene, NuID=nuids)
+filt.probe2gene <- filt.probe2gene[!(is.na(filt.probe2gene$NuID)),]
+save(filt.probe2gene, file='/group/stranger-lab/immvar_rep/mappings/ilmnv3.Robj')
+dup.probes <- unique(filt.probe2gene[duplicated(filt.probe2gene$NuID),"NuID"])
+# Remove filtered probes from expr matrix
+selDataMatrix <- selDataMatrix[rownames(selDataMatrix)%in%filt.probe2gene$NuID,]
+
+pdf('non_summarized_density.pdf')
+plot(density(log2(as.numeric(selDataMatrix))), main='Density of Non-Summarized Gencord data')
+dev.off()
+
+# Save single-mapping probes
+nonDupMat <- selDataMatrix[!(rownames(selDataMatrix)%in%dup.probes),]
+
+ensemblIDs <- c()
+for (id in rownames(nonDupMat)) {
+	ensemblIDs <- c(ensemblIDs, as.character(filt.probe2gene[filt.probe2gene$NuID==id, "EnsemblID"]))
+}
+
+# Some probes map to multiple genes, so need one row per mapping in expr matrix
+dupMat <- selDataMatrix[(rownames(selDataMatrix)%in%dup.probes),]
+
+dupMatExp <- NULL
+for (id in rownames(dupMat)) {
+	ids <- filt.probe2gene[filt.probe2gene$NuID==id, "EnsemblID"]
+	for (i in seq(length(ids))) {
+		dupMatExp <- rbind(dupMatExp, dupMat[id, ])
+	}
+	ensemblIDs <- c(ensemblIDs, as.character(ids))
+}
+
+selDataMatrix <- rbind(nonDupMat, dupMatExp)
+exp.summarized <- summarize(selDataMatrix, probes=ensemblIDs)
+
+pdf('summarized_density.pdf')
+plot(density(as.numeric(exp.summarized)), main='Density of Summarized GenCord Data')
+dev.off()
 
 # Reorder predicted sex to match column order in expression matrix
 sample.sex <-c()
@@ -102,10 +150,17 @@ for (id in colnames(exp.summarized)) {
 
 sample.factors <- as.numeric(sample.sex=='male')
 fit <- fitData(exp.summarized, sample.factors)
+gene.annots <- read.table(file='/group/stranger-lab/moliva/ImmVar/probes_mapping/annotations/gencode.v22.TSS.txt', header=T, row.names=1)
+gene.names <- c()
+for (id in rownames(fit)) {
+	gene.names <- c(gene.names, as.character(gene.annots[id, "symbol_id"]))
+}
+fit$genes <- gene.names
+#svobj <- fitData(exp.summarized, sample.factors)
 
 plotVolcano <- function(fit) {
 	pdf('volcano.pdf', width=10, height=10)
-	volcanoplot(fit, names=rownames(fit), cex=0.5, highlight=75)
+	volcanoplot(fit, names=fit$genes, cex=0.5, highlight=75)
 	dev.off()
 }
 plotVolcano(fit)
