@@ -1,6 +1,0 @@
-# Todo for 14 August 2015
-
-Charles 
-* Functionalize probe removal code
-
-Meri

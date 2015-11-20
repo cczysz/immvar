@@ -3,6 +3,7 @@ library(limma)
 #library(ggplot2)
 library(sva)
 library(genefilter)
+library(gtools)
 
 # Populations: Caucasian, African-American, Asian
 # Cell types: CD14, CD4
@@ -139,19 +140,23 @@ FTest <- function(fit, exp_genes, expr.residuals, sex) {
 }
 
 for (population in c("Caucasian","African-American","Asian")) {
-for (cell.type in c("CD14","CD4")) {
+for (cell.type in c("CD4","CD14")) {
 	population <<- population
 	cell.type <<- cell.type
 	load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
+	load('/group/stranger-lab/immvar_rep/mappings/annot.Robj')
+	#load('/group/stranger-lab/moliva/ImmVar/probes_mapping/Robjects/merge_probes_DF.Robj')
+	#annots <- read.table(file='/group/stranger-lab/moliva/ImmVar/probes_mapping/annotations/gene_annot', header=F, row.names=1)
+	#colnames(annots) <- c('symbol', 'chr', 'start', 'stop', 'strand')
 	
 	if (cell.type == "CD14") phen.cell.type <- "CD14+16-Mono"
 	else phen.cell.type <- "CD4TNve"
 
-	phen <- phen[phen$CellType == phen.cell.type, ]
+	phen <- phen[phen$CellType == phen.cell.type & phen$Race == population, ]
 
 	data.dir <- "/group/stranger-lab/moliva/ImmVar/Robjects/"
 	load(file=paste(data.dir,paste("exp_genes",cell.type,population,"Robj",sep="."),sep=""))
-	
+	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
 	if (F) {
 	data.dir <- "/group/stranger-lab/immvar_data/"
 	load(file=paste(data.dir,paste("exp_genes_ftest",cell.type,population,"Robj",sep="."),sep=""))
@@ -159,9 +164,9 @@ for (cell.type in c("CD14","CD4")) {
 	load(file = paste(data.dir,res.file.name,sep=""))
 	fit.file.name <- paste("fit",cell.type,population,"Robj",sep=".")
 	load(file = paste(data.dir,fit.file.name,sep=""))
-	}
 	
 	sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
+	#sex <- as.numeric(phen$Sex == 'Male')
 	data.dir <- "/group/stranger-lab/czysz/ImmVar/apt_datasets/"
 	if (cell.type == "CD14") { 
 		file.n <- paste(data.dir,"cd14_cau_kill.txt", sep='')
@@ -169,12 +174,13 @@ for (cell.type in c("CD14","CD4")) {
 		file.n <- paste(data.dir,"cd4_cau_kill.txt", sep='')
 	}
 	exp_genes <- as.matrix(read.table(file=file.n, header=T, row.names=1))
+	}
 
-	if (T) {
+	if (F) {
 		#file.path <- paste(data.dir,"exp_genes.",cell.type,".",population,".Robj",sep="")
 		#load(file=file.path)
 
-		sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
+		#sex <- as.numeric(phen[phen$Race == population, ]$Sex == 'Male')
 		#peer.factors <- RunPeer(exp_genes,k=20,sex)
 
 		#expr.residuals <- apply(exp_genes, 1, MakeResiduals, peer.factors=peer.factors)
@@ -184,13 +190,26 @@ for (cell.type in c("CD14","CD4")) {
 		#save(expr.residuals, file = paste("/group/stranger-lab/immvar_data/",save.file.name,sep=""))
 	
 	}
-	eb.fit <- PerformDEAnalysis(exp_genes, sex)
-	eb.fit$N <- rep(ncol(exp_genes), nrow(eb.fit))
-	fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
-	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
 
-	AnalyzeFit(eb.fit, exp_genes, sex)
+	rownames(phen) <- phen$ImmVarID2
+	eb.fit <- PerformDEAnalysis(exp_genes, sex)
+	eb.fit$N <- as.numeric(rep(ncol(exp_genes), nrow(eb.fit)))
+	eb.fit$chr <- as.character(annots[rownames(eb.fit), "chr"])
+	eb.fit$symbol <- as.character(annots[rownames(eb.fit), "symbol_id"])
+	fit.save.name <- paste("fit",population,cell.type,"Robj",sep=".")
+	#fit.save.name <- paste("fit",cell.type,population,"Robj",sep=".")
+	save(eb.fit, file=paste("/group/stranger-lab/immvar_data/",fit.save.name,sep=""))
 	
+	pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/', paste(cell.type, population,'volcano.pdf',sep='_'),sep=''))
+	title <- paste(cell.type, population, sep=" ")
+	volcanoplot(eb.fit, cex=0.5, names=eb.fit$symbol, highlight=50, main=paste(title, "all genes"))
+	fit.sex <- eb.fit[(eb.fit$chr == 'chrY' | eb.fit$chr=='chrX'),] 
+	fit.auto <- eb.fit[!(eb.fit$chr == 'chrY' | eb.fit$chr=='chrX'),] 
+	volcanoplot(fit.sex, cex=0.5, names=fit.sex$symbol, highlight=50, main=paste(title, "X and Y genes"))
+	volcanoplot(fit.auto, cex=0.5, names=fit.auto$symbol, highlight=50, main=paste(title, "Autosomal genes"))
+	dev.off()
+	
+	#AnalyzeFit(eb.fit, exp_genes, sex)
 	#FTest(eb.fit,exp_genes,expr.residuals, sex)
 
 	}
