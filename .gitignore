@@ -1,2 +1,4 @@
 *.pdf
 *.txt
+.nfs*
+.DS_Store
