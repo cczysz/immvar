@@ -10,6 +10,7 @@ library(oligo)
 library(annotate)
 
 setwd('/group/stranger-lab/immvar_rep/GenCord')
+load('/group/stranger-lab/immvar_rep/mappings/annot.Robj')
 importRawData <- function() {
 	dat <- lumiR('GSE17080_unnormalized_T-cells.txt', 
 	lib.mapping = 'lumiHumanIDMapping',
@@ -138,17 +139,31 @@ for (id in rownames(dupMat)) {
 selDataMatrix <- rbind(nonDupMat, dupMatExp)
 exp.summarized <- summarize(selDataMatrix, probes=ensemblIDs)
 
+if (F) {
 pdf('summarized_density.pdf')
 plot(density(as.numeric(exp.summarized)), main='Density of Summarized GenCord Data')
 dev.off()
+}
 
 # Reorder predicted sex to match column order in expression matrix
 sample.sex <-c()
 for (id in colnames(exp.summarized)) {
 	sample.sex<-c(sample.sex, sample.results[sample.results$ID==id, "sex"])	
 }
-
 sample.factors <- as.numeric(sample.sex=='male')
+
+# Filter out genes below 10th percentile of expression in both males and females
+f.m <- pOverA(0.10, quantile(as.numeric(exp.summarized[, !!sample.factors]), probs=c(0.1)))
+f.f <- pOverA(0.10, quantile(as.numeric(exp.summarized[, !sample.factors]), probs=c(0.1)))
+ffun <- filterfun(f.m, f.f)
+filtered.genes <- genefilter(exp.summarized, ffun)
+save(filtered.genes, file='filter_genes.Robj')
+
+print(paste("Genes before expression filtering:", nrow(exp.summarized), sep="\n"))
+exp.summarized <- exp.summarized[filtered.genes, ]
+print(paste("Genes after expression filtering:", nrow(exp.summarized), sep="\n"))
+save(exp.summarized, file="gencord_tcells_summarized.Robj")
+
 fit <- fitData(exp.summarized, sample.factors)
 gene.annots <- read.table(file='/group/stranger-lab/moliva/ImmVar/probes_mapping/annotations/gencode.v22.TSS.txt', header=T, row.names=1)
 gene.names <- c()
@@ -156,6 +171,7 @@ for (id in rownames(fit)) {
 	gene.names <- c(gene.names, as.character(gene.annots[id, "symbol_id"]))
 }
 fit$genes <- gene.names
+fit$chr <- annots[rownames(fit), "chr"]
 #svobj <- fitData(exp.summarized, sample.factors)
 
 plotVolcano <- function(fit) {

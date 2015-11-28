@@ -12,4 +12,4 @@
 module load R/3.1.0
 
 #DATA_DIR=/home/t.cczysz/mRNA_expression/CEL_files/CD4
-R CMD BATCH --no-save --no-restore /group/stranger-lab/immvar_rep/emtab2232/fairfax.R
+R CMD BATCH --no-save --no-restore /group/stranger-lab/immvar/rep_scripts/fairfax.R

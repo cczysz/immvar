@@ -6,8 +6,10 @@ library(lumiHumanAll.db)
 library(sva)
 library(massiR)
 library(oligo)
+library(genefilter)
 
 setwd('/group/stranger-lab/immvar_rep/GSE56580')
+load('/group/stranger-lab/immvar_rep/mappings/annot.Robj')
 if (!file.exists('norm_data.Robj')) {
 	dat <- lumiR('non_norm.txt', 
 		lib.mapping = 'lumiHumanIDMapping',
@@ -108,17 +110,36 @@ for (gene in unique(filt.probes$EnsemblID)) {
 	tempMat <- rbind(tempMat, selDataMatrix[rownames(selDataMatrix)%in%info$NuID,])
 	ensIDs <- c(ensIDs, rep(gene, sum(rownames(selDataMatrix)%in%info$NuID)))
 }
-exp.summarized <- basicRMA(tempMat, ensIDs, F, F)
+exp.summarized <- summarize(tempMat, probes=ensIDs)
 sample.factors <- as.numeric(sample.results$sex=="male")
 
+# Filter lowly expressed genes
+f.m <- pOverA(0.10, quantile(as.numeric(exp.summarized[, !!sample.factors]), probs=c(0.1)))
+f.f <- pOverA(0.10, quantile(as.numeric(exp.summarized[, !sample.factors]), probs=c(0.1)))
+ffun <- filterfun(f.m, f.f)
+filtered.genes <- genefilter(exp.summarized, ffun)
+save(filtered.genes, file='filter_genes.Robj')
+print(paste("Genes before expression filtering:", nrow(exp.summarized), sep="\n"))
+exp.summarized <- exp.summarized[filtered.genes, ]
+print(paste("Genes after expression filtering:", nrow(exp.summarized), sep="\n"))
+save(exp.summarized, file="mesa_tcells_summarized.Robj")
+
+
 fit <- fitData(exp.summarized, sample.factors)
-save(fit, file='gencord_fit.Robj')
+
+annot <- read.table(file='/group/stranger-lab/moliva/ImmVar/probes_mapping/annotations/gencode.v22.TSS.txt', header=T, row.names=1)
+gene.names <- c()
+for (id in rownames(fit)) {
+	gene.names <- c(gene.names, as.character(annot[id, "symbol_id"]))
+}
+fit$genes <- gene.names
+save(fit, file='mesa_tcells_fit.Robj')
 top_diff <- topTable(fit, number=Inf, p.value=0.05)
 top_diff$gene <- geneSymbol[rownames(top_diff)]
 
 plotVolcano <- function(fit) {
 	pdf('volcano.pdf', width=10, height=10)
-	volcanoplot(fit, names=rownames(fit), cex=0.5, highlight=75, main="Sex DE - MESA T-cells")
+	volcanoplot(fit, names=fit$genes, cex=0.5, highlight=75, main="Sex DE - MESA T-cells")
 	dev.off()
 }
 plotVolcano(fit)
