@@ -8,12 +8,11 @@ for e in $(echo "c1.all c2.cgp c2.cp.biocarta c2.cp.kegg c2.cp.reactome c3.mir c
 	echo $e; 
 	head -n 21 *.$e.*/gsea_report_for_na_pos_*.xls | grep 'tag' | awk '{print $1}'  | sort | uniq > $e.top20_gene_sets.na_pos.txt ;
 	for u in $(cat $e.top20_gene_sets.na_pos.txt); do
-		#echo $(grep -cw $u *$e*/gsea_report_for_na_pos_*xls | grep -oP ":[01]" | sed 's/://g' | sed 's/\s/\t/g' ) >> $e.top20_gene_sets.na_pos.values.txt;
-		#echo $(grep -w $u *$e*/gsea_report_for_na_pos_*xls | grep -oP ":[01]" | sed 's/://g' | sed 's/\s/\t/g' ) >> $e.top20_gene_sets.na_pos.values.txt;
 		echo $u;
-		echo $(grep -w $u *$e*/gsea_report_for_na_pos_*xls | awk '{print $9}' ) >> $e.top20_gene_sets.na_pos.values.txt;
+		#echo $(grep -w $u *$e*/gsea_report_for_na_pos_*xls | awk '{print $9}' ) >> $e.top20_gene_sets.na_pos.values.txt;
+		echo $(grep -cw $u *$e*/gsea_report_for_na_pos_*xls | grep -oP ":[01]" | sed 's/://g' | sed 's/\s/\t/g' ) >> $e.top20_gene_sets.na_pos.values.txt;
 	done;
-	paste  $e.top20_gene_sets.na_pos.txt $e.top20_gene_sets.na_pos.values.txt > $e.top20_gene_sets.na_pos.matrix.txt;
+	paste $e.top20_gene_sets.na_pos.txt $e.top20_gene_sets.na_pos.values.txt > $e.top20_gene_sets.na_pos.matrix.txt;
 done;
 
 mkdir top20; mv *.top20* top20/;
