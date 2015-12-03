@@ -34,7 +34,7 @@ immvar.fit.objects <- c('fit.joint.CD14.Robj', 'fit.joint.CD4.Robj')
 immvar.dir <- '/group/stranger-lab/immvar_data/'
 rep.fit.objects <- c('emtab2232/fairfax_fit.Robj', 'GenCord/gencord_fit.Robj', 'GSE56580/mesa_tcells_fit.Robj', 'GSE56045/gencord_fit.Robj')
 rep.dir <- '/group/stranger-lab/immvar_rep/'
-
+if (F) {
 for (obj in immvar.fit.objects) {
 	load(paste(immvar.dir, obj, sep=''))
 	pvals <- eb.fit$p.value
@@ -45,11 +45,13 @@ for (obj in immvar.fit.objects) {
 	uni=uni[!nchar(uni$hgnc_symbol)<1,]
 	a=pvals[substring(rownames(pvals),1,15)%in%uni[,1],]
 	rownames(uni)=names(a)
+	to.write <- cbind(uni[names(a[order(a)]), "hgnc_symbol"], -log10(a[order(a)]))
 
-	f.name <- paste('immvar', unlist(strsplit(obj, split='[.]'))[3], 'rnk', sep='.')
-	write.table(file=paste("/home/t.cri.cczysz/", f.name, sep=''), cbind(uni[names(a[order(a)]),"hgnc_symbol"], -log10(a[order(a)])), quote=F, row.names=F, col.names=F, sep="\t")
+	#f.name <- paste('immvar', unlist(strsplit(obj, split='[.]'))[3], 'rnk', sep='.')
+	#write.table(file=paste("/home/t.cri.cczysz/", f.name, sep=''), cbind(uni[names(a[order(a)]),"hgnc_symbol"], -log10(a[order(a)])), quote=F, row.names=F, col.names=F, sep="\t")
 }
-
+}
+if (F) {
 for (obj in rep.fit.objects) {
 	load(paste(rep.dir, obj, sep=''))
 
@@ -64,4 +66,26 @@ for (obj in rep.fit.objects) {
 
 	f.name <- paste('rep', unlist(strsplit(obj, split='[/]'))[1], 'rnk', sep='.')
 	write.table(file=paste("/home/t.cri.cczysz/", f.name, sep=''), cbind(uni[names(a[order(a)]),"hgnc_symbol"], -log10(a[order(a)])), quote=F, row.names=F, col.names=F, sep="\t")
+}
+}
+
+if (T) {
+setwd('/group/stranger-lab/immvar/meta/')
+ensembl = useMart("ENSEMBL_MART_ENSEMBL",dataset="hsapiens_gene_ensembl", host="www.ensembl.org")
+for (f in c('cd14_meta_rep1.txt', 'cd4_meta_rep1.txt')) {
+	meta_res <- read.table(file=f, header=T, row.names=1)
+	pvals <- data.frame(meta_res$P.value, row.names=rownames(meta_res))
+		
+	biomart.results=getBM(ensembl,attributes=c("ensembl_gene_id","hgnc_symbol","entrezgene"),filters="ensembl_gene_id",values=substring(rownames(meta_res),1,15))
+	uni=biomart.results[!duplicated(biomart.results[,1]),]
+	uni=uni[!duplicated(uni[,2]),]
+	uni=uni[!nchar(uni$hgnc_symbol)<1,]
+	a=pvals[substring(rownames(pvals),1,15)%in%uni[,1],]
+	names(a) <- rownames(pvals)[substring(rownames(pvals), 1, 15)%in%uni[,1]]
+	rownames(uni) <- uni[, 1]
+	a.order <- a[order(a)]	
+	to.write <- cbind(uni[substr(names(a[order(a)]),1,15), "hgnc_symbol"], -log10(a[order(a)]))
+	f.name <- paste('meta', unlist(strsplit(f, split='_'))[1], 'rnk', sep='.')
+	write.table(to.write, file=paste('/home/t.cri.cczysz/', f.name, sep=''), quote=F, row.names=F, col.names=F, sep="\t")
+}
 }
