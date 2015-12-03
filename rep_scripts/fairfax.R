@@ -35,7 +35,8 @@ if (!file.exists('cd14_norm_exp.Robj')) {
 		lib.mapping = 'lumiHumanIDMapping',
 		columnNameGrepPattern=list(exprs='AVG_Signal', se.exprs='BEAD_STDEV', detection='Detection', beadNum='Avg_NBEADS'))
 	#dat.N <- lumiN(dat, method="quantile")
-	dat.N <- lumiExpresso(dat, varianceStabilize.param=list(method='vst'), normalize.param=list(method="quantile"))
+	#dat.N <- lumiExpresso(dat, varianceStabilize.param=list(method='vst'), normalize.param=list(method="quantile"))
+	dat.N <- lumiExpresso(dat, bg.correct=T, bgcorrect.param=list(method='forcePositive'), variance.stabilize=F, normalize.param=list(method="quantile"))
 	save(dat.N, file="cd14_norm_exp.Robj")
 } else load(file='cd14_norm_exp.Robj')
 
@@ -64,11 +65,11 @@ if (!file.exists('fairfax_monocytes_summarized.Robj')) {
 		ensIDs <- c(ensIDs, rep(gene, sum(rownames(eset)%in%info$NuID)))
 	}
 	exp.summarized <- summarize(tempMat, probes=ensIDs)
+	exp.summarized <- 2^exp.summarized
 	rm(tempMat)
 	save(exp.summarized, file="fairfax_monocytes_summarized.Robj")
 } else { load(file="fairfax_monocytes_summarized.Robj") }
 
-q('no')
 if (F) {
 	massi_y_plot(massi.y.out)
 	massi_cluster_plot(massi.select.out, results)
@@ -88,28 +89,28 @@ f.m <- pOverA(0.10, quantile(as.numeric(exp.summarized[, !!males]), probs=c(0.1)
 f.f <- pOverA(0.10, quantile(as.numeric(exp.summarized[, !males]), probs=c(0.1)))
 ffun <- filterfun(f.m, f.f)
 filtered.genes <- genefilter(exp.summarized, ffun)
-q()
+
+exp.summarized <- exp.summarized[filtered.genes, ]
 mod = model.matrix(~0+as.factor(males))
 colnames(mod) <- c('Female', 'Male')
 mod0 = model.matrix(~0+rep(1,length(males)))
 
 if (!file.exists('fairfax_sv.Robj')) {
-	svobj <- sva(na.omit(exp.summarized), mod, mod0)
+	svobj <- sva(exp.summarized, mod, mod0)
 	save(svobj, file='fairfax_sv.Robj')
 } else load(file='fairfax_sv.Robj')
 modSv <- cbind(mod, svobj$sv)
 
-if (!file.exists('fairfax.fit')) {
-	fit <- lmFit(na.omit(exp.summarized), modSv)
+if (!file.exists('fairfax_fit.Robj')) {
+	fit <- lmFit(exp.summarized, modSv)
 	contrast.matrix <- c(-1,1,rep(0, svobj$n.sv))
 	contrast.fit <- contrasts.fit(fit, contrast.matrix)
 	fit <- eBayes(contrast.fit)
 	fit$genes <- annots[rownames(fit), "symbol_id"]
 	fit$chr <- annots[rownames(fit), "chr"]
-	save(fit, file='fairfax.fit')
-} else load('fairfax.fit')
+	save(fit, file='fairfax_fit.Robj')
+} else load('fairfax_fit.Robj')
 
 pdf(file='volcano.pdf')
 volcanoplot(fit, names=fit$genes, highlight=50, cex=0.5)
 dev.off()
-save.image()
