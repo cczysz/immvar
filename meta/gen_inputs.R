@@ -41,7 +41,7 @@ write.table(sig, file=paste('/home/t.cri.cczysz/',f_out,sep=''), quote=F, sep="\
 }
 }
 
-files.in <- c('emtab2232/fairfax.fit', 'GenCord/gencord_fit.Robj', 'GSE56580/mesa_tcells_fit.Robj', 'GSE56045/gencord_fit.Robj')
+files.in <- c('emtab2232/fairfax_fit.Robj', 'GenCord/gencord_fit.Robj', 'GSE56580/mesa_tcells_fit.Robj', 'GSE56045/gencord_fit.Robj')
 studies <- c('Fairfax', 'Gencord', 'MesaT', 'MesaM')
 sample_size <- as.numeric(c(432, 85, 227, 1264))
 # fit,fit

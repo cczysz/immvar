@@ -34,7 +34,7 @@ immvar.fit.objects <- c('fit.joint.CD14.Robj', 'fit.joint.CD4.Robj')
 immvar.dir <- '/group/stranger-lab/immvar_data/'
 rep.fit.objects <- c('emtab2232/fairfax_fit.Robj', 'GenCord/gencord_fit.Robj', 'GSE56580/mesa_tcells_fit.Robj', 'GSE56045/gencord_fit.Robj')
 rep.dir <- '/group/stranger-lab/immvar_rep/'
-if (F) {
+if (T) {
 for (obj in immvar.fit.objects) {
 	load(paste(immvar.dir, obj, sep=''))
 	pvals <- eb.fit$p.value
@@ -47,11 +47,11 @@ for (obj in immvar.fit.objects) {
 	rownames(uni)=names(a)
 	to.write <- cbind(uni[names(a[order(a)]), "hgnc_symbol"], -log10(a[order(a)]))
 
-	#f.name <- paste('immvar', unlist(strsplit(obj, split='[.]'))[3], 'rnk', sep='.')
-	#write.table(file=paste("/home/t.cri.cczysz/", f.name, sep=''), cbind(uni[names(a[order(a)]),"hgnc_symbol"], -log10(a[order(a)])), quote=F, row.names=F, col.names=F, sep="\t")
+	f.name <- paste('immvar', unlist(strsplit(obj, split='[.]'))[3], 'rnk', sep='.')
+	write.table(file=paste("/home/t.cri.cczysz/", f.name, sep=''), cbind(uni[names(a[order(a)]),"hgnc_symbol"], -log10(a[order(a)])), quote=F, row.names=F, col.names=F, sep="\t")
 }
 }
-if (F) {
+if (T) {
 for (obj in rep.fit.objects) {
 	load(paste(rep.dir, obj, sep=''))
 

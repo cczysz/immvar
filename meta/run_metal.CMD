@@ -18,7 +18,7 @@ PROCESS /home/t.cri.cczysz/meta_f.Caucasian.CD14.txt
 PROCESS /home/t.cri.cczysz/meta_f.African-American.CD14.txt 
 PROCESS /home/t.cri.cczysz/meta_f.Asian.CD14.txt 
 
-OUTFILE cd14_meta .txt
+OUTFILE immvar_cd14_meta .txt
 
 # Minweight gives minimum total samples needed to output meta results
 MINWEIGHT 10
@@ -36,7 +36,7 @@ PROCESS /home/t.cri.cczysz/meta_f.Caucasian.CD4.txt
 PROCESS /home/t.cri.cczysz/meta_f.African-American.CD4.txt 
 PROCESS /home/t.cri.cczysz/meta_f.Asian.CD4.txt 
 
-OUTFILE cd4_meta .txt
+OUTFILE immvar_cd4_meta .txt
 
 MINWEIGHT 10
 ANALYZE 

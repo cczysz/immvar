@@ -53,11 +53,20 @@ if (!file.exists('norm_data.Robj')) {
 	dat <- lumiR('raw.txt', 
 		lib.mapping = 'lumiHumanIDMapping',
 		columnNameGrepPattern=list(detection="detectionPval", exprs="intensity"))
+	pdf(file='rawQC.pdf')
+	plot(dat, what='density')
+	plot(dat, what='sampleRelation', method='mds')
+	dev.off()
 
 	dat.N.T <- lumiExpresso(dat, bg.correct=F,
 		variance.stabilize=F,
 		#varianceStabilize.param = list(method='log2'), 
 		normalize.param=list(method='quantile'))
+	pdf(file='normQC.pdf')
+	plot(dat.N.T, what='density')
+	plot(dat.N.T, what='sampleRelation', method='mds')
+	dev.off()
+
 	save(dat.N.T, file='norm_data.Robj', compress="bzip2")
 } else load('norm_data.Robj')
 

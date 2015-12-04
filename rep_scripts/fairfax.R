@@ -34,9 +34,15 @@ if (!file.exists('cd14_norm_exp.Robj')) {
 	dat <- lumiR(fileName='mono_raw_286_13_10_2010.txt',
 		lib.mapping = 'lumiHumanIDMapping',
 		columnNameGrepPattern=list(exprs='AVG_Signal', se.exprs='BEAD_STDEV', detection='Detection', beadNum='Avg_NBEADS'))
-	#dat.N <- lumiN(dat, method="quantile")
-	#dat.N <- lumiExpresso(dat, varianceStabilize.param=list(method='vst'), normalize.param=list(method="quantile"))
+
+	pdf(file='raw_QC.pdf')
+	plot(dat, what='density', main='Fairfax Raw Density')
+	dev.off()
 	dat.N <- lumiExpresso(dat, bg.correct=T, bgcorrect.param=list(method='forcePositive'), variance.stabilize=F, normalize.param=list(method="quantile"))
+
+	pdf(file='norm_QC.pdf')
+	plot(dat.N, what='density', main='Fairfax Normalized Density')
+	dev.off()
 	save(dat.N, file="cd14_norm_exp.Robj")
 } else load(file='cd14_norm_exp.Robj')
 
@@ -65,7 +71,7 @@ if (!file.exists('fairfax_monocytes_summarized.Robj')) {
 		ensIDs <- c(ensIDs, rep(gene, sum(rownames(eset)%in%info$NuID)))
 	}
 	exp.summarized <- summarize(tempMat, probes=ensIDs)
-	exp.summarized <- 2^exp.summarized
+	#exp.summarized <- 2^exp.summarized
 	rm(tempMat)
 	save(exp.summarized, file="fairfax_monocytes_summarized.Robj")
 } else { load(file="fairfax_monocytes_summarized.Robj") }

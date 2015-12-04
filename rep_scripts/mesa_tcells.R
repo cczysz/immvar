@@ -23,17 +23,18 @@ if (!file.exists('norm_data.Robj')) {
 } else load('norm_data.Robj')
 
 # QC Plots
-if (F) {
-	pdf('raw_density.pdf')
-	plot(dat, what='density')
-	dev.off()
+if (T) {
 
-	pdf('sample_relation.pdf', width=12, height=8)
-	plot(dat, what='sampleRelation', cex=0.5)
-	plot(dat.N.T, what='sampleRelation', cex=0.5)
+	pdf('raw_QC.pdf', width=12, height=8)
+	plot(dat, what='density')
 	plot(dat, what='sampleRelation', method='mds')
 	dev.off()
 }
+
+pdf('norm_QC.pdf', width=12, height=8)
+plot(dat, what='density')
+plot(dat, what='sampleRelation', method='mds')
+dev.off()
 
 selDataMatrix <- exprs(dat.N.T)
 probeList <- rownames(selDataMatrix)

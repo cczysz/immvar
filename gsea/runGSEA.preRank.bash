@@ -1,4 +1,4 @@
-for f in /home/t.cri.cczysz/redo/*.rnk; do
+for f in /home/t.cri.cczysz/*.rnk; do
 	#for set in $(ls /scratch/t.cczysz/gene_symbols/* | grep -v c2.all | grep -v c3.all | grep -v c4.all | grep -v c5.all); do
 	for set in $(ls /scratch/t.cczysz/gene_symbols/* | grep -v c[2-5].all); do
 	#geneset_short=$(echo $set | grep -oP "/[ch].*?\.v5\.0" | sed 's/\///g');
@@ -10,7 +10,7 @@ for f in /home/t.cri.cczysz/redo/*.rnk; do
 	echo "$sname";
 	echo "$geneset_short";
 
-	java  -Xms9g -Xmx10g -cp /home/t.cri.cczysz/gsea2-2.2.0.jar xtools.gsea.GseaPreranked \
+	java  -Xms10g -Xmx15g -cp /home/t.cri.cczysz/gsea2-2.2.0.jar xtools.gsea.GseaPreranked \
 	-gmx $set \
 	-rnk $f \
 	-rpt_label $fname.$geneset_short \

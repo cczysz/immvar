@@ -17,6 +17,16 @@ importRawData <- function() {
 	columnNameGrepPattern=list(detection=NA, beadNum=NA))
 	fdat <<- fData(dat)	
 	dat.exp <- exprs(dat)
+	
+	pdf(file='raw_density.pdf', width=8.5, height=11)
+	plot(dat, what='density')
+	dev.off()
+
+	pdf(file='raw_density.pdf', width=8.5, height=11)
+	plot(dat, what='MAplot', smoothScatter=T)
+	plot(example.lumi, what='sampleRelation', method='mds', cex=0.5)
+	dev.off()
+
 
 	ids<-c()
 	for (id in colnames(dat.exp)) {
@@ -159,9 +169,9 @@ ffun <- filterfun(f.m, f.f)
 filtered.genes <- genefilter(exp.summarized, ffun)
 save(filtered.genes, file='filter_genes.Robj')
 
-print(paste("Genes before expression filtering:", nrow(exp.summarized), sep="\n"))
+print(paste("Genes before expression filtering:", nrow(exp.summarized), sep="\t"))
 exp.summarized <- exp.summarized[filtered.genes, ]
-print(paste("Genes after expression filtering:", nrow(exp.summarized), sep="\n"))
+print(paste("Genes after expression filtering:", nrow(exp.summarized), sep="\t"))
 save(exp.summarized, file="gencord_tcells_summarized.Robj")
 
 fit <- fitData(exp.summarized, sample.factors)
@@ -172,7 +182,6 @@ for (id in rownames(fit)) {
 }
 fit$genes <- gene.names
 fit$chr <- annots[rownames(fit), "chr"]
-#svobj <- fitData(exp.summarized, sample.factors)
 
 plotVolcano <- function(fit) {
 	pdf('volcano.pdf', width=10, height=10)
@@ -180,4 +189,5 @@ plotVolcano <- function(fit) {
 	dev.off()
 }
 plotVolcano(fit)
-write.table(topTable(fit, number=Inf, p.value=0.05), file='sig_eb_fit.txt', quote=F)
+write.table(data.frame(p.val=fit$p.value, p.adj=p.adjust(fit$p.value, method='fdr')), quote=F, row.names=T, col.names=T, file='/group/stranger-lab/immvar_rep/GenCord/fit.txt')
+#write.table(topTable(fit, number=Inf, p.value=0.05), file='sig_eb_fit.txt', quote=F)
