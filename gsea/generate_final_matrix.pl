@@ -32,7 +32,7 @@ foreach my $gene_set_type (@gene_set_types) {
 	
 		my $fileout=join('.',$gene_set_type,'top20_gene_sets',$sex,'total.matrix.txt');
 		open ($out,'>',$fileout);
-		print $out "Gene_set immvar.CD14 immvar.CD4 Fairfax GenCord MESA.M MESA.T meta.CD14 meta.CD4\n";
+		print $out "Gene_set immvar.CD14 immvar.CD4 Fairfax META.M meta.CD14 GenCord MESA.T meta.CD4\n";
 		for my $key ( sort { sum(@{$matrix{$sex}{$gene_set_type}{$b}}) <=> sum(@{$matrix{$sex}{$gene_set_type}{$a}})  } keys %{$matrix{$sex}{$gene_set_type}} )
         	{
 			my $string = join(" ", $key,@{$matrix{$sex}{$gene_set_type}{$key}});

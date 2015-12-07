@@ -18,14 +18,16 @@ done;
 mkdir top20; mv *.top20* top20/;
 
 #for i in $(echo "cd4 cd14 intersect joint"); do
-for i in $(echo "immvar.CD14 immvar.CD4 rep.emtab2232 rep.GenCord rep.GSE56580 rep.GSE56045 meta.cd14 meta.cd4"); do
+#for i in $(echo "immvar.CD14 immvar.CD4 rep.emtab2232 rep.GenCord rep.GSE56580 rep.GSE56045 meta.cd14 meta.cd4"); do
+for i in $(echo "immvar.CD14 immvar.CD4 rep.emtab2232 rep.GSE56045 meta.cd14 rep.GenCord rep.GSE56580 meta.cd4"); do
 	for e in $(echo "c1.all c2.cgp c2.cp.biocarta c2.cp.kegg c2.cp.reactome c3.mir c3.tft c4.cgn c4.cm c5.bp c5.cc c5.mf c6.all c7.all"); do
 		cat $i.rnk.$e*/gsea_report_for_na_pos_*xls | awk -F "\t" '{if ($7 < 0.05) {print $1}}' > $i.$e.na_pos.filter.nompval.0.05.txt ;
 	done;
 done;
 
 #for i in $(echo "cd4 cd14 intersect joint"); do
-for i in $(echo "immvar.CD14 immvar.CD4 rep.emtab2232 rep.GenCord rep.GSE56580 rep.GSE56045 meta.cd14 meta.cd4"); do
+#for i in $(echo "immvar.CD14 immvar.CD4 rep.emtab2232 rep.GenCord rep.GSE56580 rep.GSE56045 meta.cd14 meta.cd4"); do
+for i in $(echo "immvar.CD14 immvar.CD4 rep.emtab2232 rep.GSE56045 meta.cd14 rep.GenCord rep.GSE56580 meta.cd4"); do
 	for e in $(echo "c1.all c2.cgp c2.cp.biocarta c2.cp.kegg c2.cp.reactome c3.mir c3.tft c4.cgn c4.cm c5.bp c5.cc c5.mf c6.all c7.all"); do
 		cat $i.rnk.$e*/gsea_report_for_na_pos_*xls | awk -F "\t" '{if ($8 < 0.25) {print $1}}' > $i.$e.na_pos.filter.fdr.0.25.txt;
 	done;
