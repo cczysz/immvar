@@ -72,7 +72,7 @@ for (obj in rep.fit.objects) {
 if (T) {
 setwd('/group/stranger-lab/immvar/meta/')
 ensembl = useMart("ENSEMBL_MART_ENSEMBL",dataset="hsapiens_gene_ensembl", host="www.ensembl.org")
-for (f in c('cd14_meta_rep1.txt', 'cd4_meta_rep1.txt')) {
+for (f in c('cd14_meta_rep1.txt', 'cd4_meta_rep1.txt', 'cd4_meta_all1.txt', 'cd14_meta_all1.txt')) {
 	meta_res <- read.table(file=f, header=T, row.names=1)
 	pvals <- data.frame(meta_res$P.value, row.names=rownames(meta_res))
 		
@@ -85,7 +85,7 @@ for (f in c('cd14_meta_rep1.txt', 'cd4_meta_rep1.txt')) {
 	rownames(uni) <- uni[, 1]
 	a.order <- a[order(a)]	
 	to.write <- cbind(uni[substr(names(a[order(a)]),1,15), "hgnc_symbol"], -log10(a[order(a)]))
-	f.name <- paste('meta', unlist(strsplit(f, split='_'))[1], 'rnk', sep='.')
+	f.name <- paste('meta', paste(unlist(strsplit(f, split='_'))[c(1,3)], collapse='_'), 'rnk', sep='.')
 	write.table(to.write, file=paste('/home/t.cri.cczysz/', f.name, sep=''), quote=F, row.names=F, col.names=F, sep="\t")
 }
 }

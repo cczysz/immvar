@@ -23,7 +23,7 @@ foreach my $gene_set_type (@gene_set_types) {
 				@values=split(" ",$_);
 				my $gene_set=shift(@values);
 				#unless(exists($matrix{$sex}{$gene_set_type}{$gene_set})) { $matrix{$sex}{$gene_set_type}{$gene_set}=[qw(0 0 0 0)]};
-				unless(exists($matrix{$sex}{$gene_set_type}{$gene_set})) { $matrix{$sex}{$gene_set_type}{$gene_set}=[qw(0 0 0 0 0 0 0 0)]};
+				unless(exists($matrix{$sex}{$gene_set_type}{$gene_set})) { $matrix{$sex}{$gene_set_type}{$gene_set}=[qw(0 0 0 0 0 0 0 0 0 0)]};
 				if($filetype eq 'filter.fdr.0.25.matrix.txt') {@values = map { $_ * 2 } @values;}
 				$matrix{$sex}{$gene_set_type}{$gene_set} = [pairwise { $a + $b } @{$matrix{$sex}{$gene_set_type}{$gene_set}}, @values];
 			}
@@ -32,7 +32,7 @@ foreach my $gene_set_type (@gene_set_types) {
 	
 		my $fileout=join('.',$gene_set_type,'top20_gene_sets',$sex,'total.matrix.txt');
 		open ($out,'>',$fileout);
-		print $out "Gene_set immvar.CD14 immvar.CD4 Fairfax META.M meta.CD14 GenCord MESA.T meta.CD4\n";
+		print $out "Gene_set Fairfax MESA.M meta.rep.CD14 meta.all.CD14 immvar.CD14 immvar.CD4 meta.all.CD4 meta.CD4 GenCord MESA.T\n";
 		for my $key ( sort { sum(@{$matrix{$sex}{$gene_set_type}{$b}}) <=> sum(@{$matrix{$sex}{$gene_set_type}{$a}})  } keys %{$matrix{$sex}{$gene_set_type}} )
         	{
 			my $string = join(" ", $key,@{$matrix{$sex}{$gene_set_type}{$key}});
