@@ -7,7 +7,7 @@ library(gwascat)
 library(ggplot2)
 load('/group/stranger-lab/immvar_rep/mappings/annot.Robj')
 
-if (!file.exists(file='/group/stranger-lab/czysz/disease_genes.Robj')) {
+if (file.exists(file='/group/stranger-lab/czysz/disease_genes.Robj')) {
 
 data(gwrngs38) # load gwas data
 
@@ -16,7 +16,7 @@ data(gwrngs38) # load gwas data
 inflam.toi <- c("Ankylosing spondylitis", "Crohn's disease", "Ulcerative colitis", "Multiple sclerosis", "Type 1 diabetes", "Rheumatoid arthritis", "Primary biliary cirrhosis", "Systemic lupus erythematosus", "Psoriasis") # save trait of interest
 metab.toi <- c('Type 2 diabetes', 'Obesity', 'Weight', "HDL cholesterol", "LDL cholesterol", "Cholesterol, total", "Body mass index")
 neuro.toi <- c("Alzheimer's disease", 'Autism', 'Bipolar disorder', "Bipolar disorder and schizophrenia", "Cognitive performance", "Cognitive test performance", "Parkinson's disease", "Schizophrenia")
-cancer.toi <- c("Bladder cancer", "Breast cancer", "Colorectal cancer", "Prostate cancer", "Thyroid cancer", "Testicular cancer", "Testicular germ cell cancer", "Testicular germ cell tumor")
+cancer.toi <- c("Bladder cancer", "Breast cancer", "Colorectal cancer", "Ovarian cancer", "Prostate cancer", "Thyroid cancer", "Testicular cancer", "Testicular germ cell cancer", "Testicular germ cell tumor")
 
 getGenes <- function(toi.list) {
 	gene.list <- list()
@@ -71,31 +71,41 @@ joint.cd14.fit$rank <- rank(joint.cd14.fit$p.value) / nrow(joint.cd14.fit)
 joint.cd14.fit$chr <- as.character(annots[rownames(joint.cd14.fit),'chr'])
 joint.cd14.sig <- subset(joint.cd14.fit, q.value<=0.05)
 
-cd14.disease.gene.counts <- lapply(y, FUN=function(i) {lapply(i, FUN=function(x, joint.cd14.fit) {sum(as.character(joint.cd14.fit$symbol)%in%x)}, joint.cd14.fit)})
-cd14.sig.disease.gene.counts <- lapply(y, FUN=function(i) {lapply(i, FUN=function(x, joint.cd14.sig) {sum(as.character(joint.cd14.sig$symbol)%in%x)}, joint.cd14.sig)})
+cd14.disease.gene.counts <- lapply(disease.genes, FUN=function(i) {lapply(i, FUN=function(x, joint.cd14.fit) {sum(as.character(joint.cd14.fit$symbol)%in%x)}, joint.cd14.fit)})
+cd14.sig.disease.gene.counts <- lapply(disease.genes, FUN=function(i) {lapply(i, FUN=function(x, joint.cd14.sig) {sum(as.character(joint.cd14.sig$symbol)%in%x)}, joint.cd14.sig)})
 sig.5 <- max(joint.cd14.sig$p.value)
 
-#pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD14.pdf',sep=''))
+cd14.disease.genes <- rep('none', nrow(joint.cd14.fit))
+cd14.immune <- joint.cd14.fit$symbol%in%unique(unlist(disease.genes[[1]]))
+cd14.metab <- joint.cd14.fit$symbol%in%unique(unlist(disease.genes[[2]]))
+cd14.neuro <- joint.cd14.fit$symbol%in%unique(unlist(disease.genes[[3]]))
+cd14.cancer <- joint.cd14.fit$symbol%in%unique(unlist(disease.genes[[4]]))
+cd14.disease.genes <- replace(cd14.disease.genes, (cd14.immune | cd14.metab | cd14.neuro | cd14.cancer), 'Disease')
+
+pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','gwas_volcano_CD14.pdf',sep=''))
 volplot.data <- data.frame(logFC=joint.cd14.fit$coefficients,
         pval=-log10(joint.cd14.fit$p.value),
         chr=as.character(joint.cd14.fit$chr),
-        row.names=rownames(joint.cd14.fit))
+        row.names=rownames(joint.cd14.fit),
+	disease=cd14.disease.genes)
 volplot.data$chr <- as.character(volplot.data$chr)
 volplot.data[!(volplot.data$chr=='chrY' | volplot.data$chr=='chrX'),'chr'] <- 'auto'
 g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
 g <- g + geom_point() + labs(title='ImmVar CD14', x='log2FC', y='-log10(pvalue)') +
         scale_color_manual(values=c('black', 'red','blue'),
                 name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) +
-        geom_abline(slope=0, intercept=-log10(sig.5))
-
-if (F) {
-g + geom_point() + labs(title='ImmVar CD14-Zoomed', x='log2FC', y='-log10(pvalue)') +
+        geom_abline(slope=0, intercept=-log10(sig.5)) + geom_point(data=subset(volplot.data, !(disease=="none")), col='green')
+g
+g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
+if (T) {
+g <- g + geom_point() + labs(title='ImmVar CD14-Zoomed', x='log2FC', y='-log10(pvalue)') +
         scale_color_manual(values=c('black', 'red','blue'),
                 name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) +
         scale_x_continuous(limits = c(-1, 1)) + scale_y_continuous(limits = c(0, 30)) +
-        geom_abline(slope=0, intercept=-log10(sig.5))
+        geom_abline(slope=0, intercept=-log10(sig.5))+ geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
 }
-#dev.off()
+g
+dev.off()
 
 load('/group/stranger-lab/immvar_data/fit.joint.CD4.Robj')
 print(topTable(eb.fit))
@@ -105,26 +115,128 @@ joint.cd4.fit$rank <- rank(joint.cd4.fit$p.value) / nrow(joint.cd4.fit)
 joint.cd4.fit$chr <- as.character(annots[rownames(joint.cd4.fit),'chr'])
 joint.cd4.sig <- subset(joint.cd4.fit, q.value<=0.05)
 
-cd4.disease.gene.counts <- lapply(y, FUN=function(i) {lapply(i, FUN=function(x, joint.cd4.fit) {sum(as.character(joint.cd4.fit$symbol)%in%x)}, joint.cd4.fit)})
-cd4.sig.disease.gene.counts <- lapply(y, FUN=function(i) {lapply(i, FUN=function(x, joint.cd4.sig) {sum(as.character(joint.cd4.sig$symbol)%in%x)}, joint.cd4.sig)})
+cd4.disease.genes <- rep('none', nrow(joint.cd4.fit))
+cd4.immune <- joint.cd4.fit$symbol%in%unique(unlist(disease.genes[[1]]))
+cd4.metab <- joint.cd4.fit$symbol%in%unique(unlist(disease.genes[[2]]))
+cd4.neuro <- joint.cd4.fit$symbol%in%unique(unlist(disease.genes[[3]]))
+cd4.cancer <- joint.cd4.fit$symbol%in%unique(unlist(disease.genes[[4]]))
+cd4.disease.genes <- replace(cd4.disease.genes, (cd4.immune | cd4.metab | cd4.neuro | cd4.cancer), 'Disease')
+
+cd4.disease.gene.counts <- lapply(disease.genes, FUN=function(i) {lapply(i, FUN=function(x, joint.cd4.fit) {sum(as.character(joint.cd4.fit$symbol)%in%x)}, joint.cd4.fit)})
+cd4.sig.disease.gene.counts <- lapply(disease.genes, FUN=function(i) {lapply(i, FUN=function(x, joint.cd4.sig) {sum(as.character(joint.cd4.sig$symbol)%in%x)}, joint.cd4.sig)})
 sig.5 <- max(joint.cd14.sig$p.value)
 
-#pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD4.pdf',sep=''))
-qqplot.data <- data.frame(logFC=joint.cd4.fit$coefficients,
+pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','gwas_volcano_CD4.pdf',sep=''))
+volplot.data <- data.frame(logFC=joint.cd4.fit$coefficients,
         pval=-log10(joint.cd4.fit$p.value),
         chr=joint.cd4.fit$chr,
-        row.names=rownames(joint.cd4.fit))
-qqplot.data$chr <- as.character(qqplot.data$chr)
-qqplot.data[!(qqplot.data$chr=='chrY' | qqplot.data$chr=='chrX'),'chr'] <- 'auto'
-g <- ggplot(data=qqplot.data, aes(x=logFC, y=pval, color=chr))
+        row.names=rownames(joint.cd4.fit),
+	disease=cd4.disease.genes)
+volplot.data$chr <- as.character(volplot.data$chr)
+volplot.data[!(volplot.data$chr=='chrY' | volplot.data$chr=='chrX'),'chr'] <- 'auto'
+g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
 g <- g + geom_point() + labs(title='ImmVar CD4', x='log2FC', y='-log10(pvalue)') +
         scale_color_manual(values=c('black','red','blue'),
                 name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) +
-        geom_abline(slope=0, intercept=-log10(sig.5[1]))
-
+        geom_abline(slope=0, intercept=-log10(sig.5[1])) + geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
+g
+g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
 g <- g + geom_point() + labs(title='ImmVar CD4-Zoomed', xlab='log2FC', ylab='-log10(pvalue)') +
         scale_color_manual(values=c('black','red','blue'),
                 name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) +
         scale_x_continuous(limits = c(-1, 1)) + scale_y_continuous(limits = c(0, 30)) +
-        geom_abline(slope=0, intercept=-log10(sig.5[1]))
-#dev.off()
+        geom_abline(slope=0, intercept=-log10(sig.5[1]))+ geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
+g
+dev.off()
+
+setwd('/group/stranger-lab/immvar/meta/')
+
+cd14.rep.meta <- read.table(file='cd14_meta_weight1.txt', header=T, row.names=1)
+cd14.rep.meta <- subset(cd14.rep.meta, Weight==2097)
+cd4.rep.meta <- read.table(file='cd4_meta_weight1.txt', header=T, row.names=1)
+cd4.rep.meta <- subset(cd4.rep.meta, Weight==719)
+
+setwd('/group/stranger-lab/immvar')
+
+cd14.rep.meta <- cbind(cd14.rep.meta,
+        q.value=p.adjust(cd14.rep.meta$P.value, method='fdr'),
+        rank=rank(cd14.rep.meta$P.value) / nrow(cd14.rep.meta),
+        chr=annots[rownames(cd14.rep.meta), 'chr'],
+        gene=annots[rownames(cd14.rep.meta), "symbol_id"])
+cd14.rep.meta$chr <- as.character(cd14.rep.meta$chr)
+cd14.rep.sig.5 <- subset(cd14.rep.meta, q.value<0.05)
+
+cd14.meta.disease.genes <- rep('none', nrow(cd14.rep.meta))
+cd14.meta.immune <- cd14.rep.meta$gene%in%unique(unlist(disease.genes[[1]]))
+cd14.meta.metab <- cd14.rep.meta$gene%in%unique(unlist(disease.genes[[2]]))
+cd14.meta.neuro <- cd14.rep.meta$gene%in%unique(unlist(disease.genes[[3]]))
+cd14.meta.cancer <- cd14.rep.meta$gene%in%unique(unlist(disease.genes[[4]]))
+cd14.meta.disease.genes <- replace(cd14.meta.disease.genes, (cd14.meta.immune), 'Inflammatory')
+cd14.meta.disease.genes <- replace(cd14.meta.disease.genes, (cd14.meta.metab), 'Metabolism')
+cd14.meta.disease.genes <- replace(cd14.meta.disease.genes, (cd14.meta.neuro), 'Neurological')
+cd14.meta.disease.genes <- replace(cd14.meta.disease.genes, (cd14.meta.cancer), 'Cancer')
+
+volplot.data = cbind(cd14.rep.meta,disease=cd14.meta.disease.genes)
+pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14_gwas_meta_volcano.pdf')
+g <- ggplot(data=cbind(cd14.rep.meta,disease=cd14.meta.disease.genes), 
+	aes(x=-1*Zscore, y=-log10(P.value), 
+	color=replace(cd14.rep.meta$chr, !(cd14.rep.meta$chr=='chrX' | cd14.rep.meta$chr=='chrY'), 'auto')))
+g <- g + geom_point() + labs(title='CD14 All Meta', x='Zscore', y='Pvalue') +
+        scale_color_manual(values=c('black', 'red','blue'),
+                name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) +
+        geom_abline(slope=0, intercept=-log10(max(cd14.rep.sig.5$P.value))) + geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
+print(g)
+g <- ggplot(data=cbind(cd14.rep.meta,disease=cd14.meta.disease.genes), 
+	aes(x=Zscore, y=-log10(P.value), 
+	color=replace(cd14.rep.meta$chr, !(cd14.rep.meta$chr=='chrX' | cd14.rep.meta$chr=='chrY'), 'auto')))
+
+g <- g + geom_point() + labs(title='CD14 All Meta', x='Zscore', y='Pvalue') +
+        scale_color_manual(values=c('black', 'red','blue'),
+                name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) +
+        scale_x_continuous(limits = c(-20, 20)) + scale_y_continuous(limits = c(0, 30)) +
+        geom_abline(slope=0, intercept=-log10(max(cd14.rep.sig.5$P.value))) + geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
+print(g);dev.off()
+cd14.meta.gwas <- subset(volplot.data, !(disease=='none'))
+print(head(cd14.meta.gwas[order(cd14.meta.gwas$P.value),c(-1:-3,-7,-8)],50))
+
+cd4.rep.meta <- cbind(cd4.rep.meta,
+        q.value=p.adjust(cd4.rep.meta$P.value, method='fdr'),
+        rank=rank(cd4.rep.meta$P.value) / nrow(cd4.rep.meta),
+        chr=annots[rownames(cd4.rep.meta), 'chr'],
+        gene=annots[rownames(cd4.rep.meta), "symbol_id"])
+cd4.rep.meta$chr <- as.character(cd4.rep.meta$chr)
+cd4.rep.sig.5 <- subset(cd4.rep.meta, q.value<0.05)
+cd4.meta.disease.genes <- rep('none', nrow(cd4.rep.meta))
+
+cd4.meta.immune <- cd4.rep.meta$gene%in%unique(unlist(disease.genes[[1]]))
+cd4.meta.metab <- cd4.rep.meta$gene%in%unique(unlist(disease.genes[[2]]))
+cd4.meta.neuro <- cd4.rep.meta$gene%in%unique(unlist(disease.genes[[3]]))
+cd4.meta.cancer <- cd4.rep.meta$gene%in%unique(unlist(disease.genes[[4]]))
+cd4.meta.disease.genes <- replace(cd4.meta.disease.genes, (cd4.meta.immune), 'Inflammatory')
+cd4.meta.disease.genes <- replace(cd4.meta.disease.genes, (cd4.meta.metab), 'Metabolism')
+cd4.meta.disease.genes <- replace(cd4.meta.disease.genes, (cd4.meta.neuro), 'Neurological')
+cd4.meta.disease.genes <- replace(cd4.meta.disease.genes, (cd4.meta.cancer), 'Cancer')
+pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4_gwas_meta_volcano.pdf')
+
+volplot.data = cbind(cd4.rep.meta,disease=cd4.meta.disease.genes)
+g <- ggplot(data=cbind(cd4.rep.meta,disease=cd4.meta.disease.genes), 
+	aes(x=-1*Zscore, y=-log10(P.value), 
+	color=replace(cd4.rep.meta$chr, !(cd4.rep.meta$chr=='chrX' | cd4.rep.meta$chr=='chrY'), 'auto')))
+g <- g + geom_point() + labs(title='CD4 All Meta', x='Zscore', y='Pvalue') +
+        scale_color_manual(values=c('black', 'red','blue'),
+                name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) +
+        geom_abline(slope=0, intercept=-log10(max(cd4.rep.sig.5$P.value))) + geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
+print(g)
+g <- ggplot(data=cbind(cd4.rep.meta,disease=cd4.meta.disease.genes), 
+	aes(x=Zscore, y=-log10(P.value), 
+	color=replace(cd4.rep.meta$chr, !(cd4.rep.meta$chr=='chrX' | cd4.rep.meta$chr=='chrY'), 'auto')))
+
+g <- g + geom_point() + labs(title='CD4 All Meta', x='Zscore', y='Pvalue') +
+        scale_color_manual(values=c('black', 'red','blue'),
+                name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) +
+        scale_x_continuous(limits = c(-20, 20)) + scale_y_continuous(limits = c(0, 30)) +
+        geom_abline(slope=0, intercept=-log10(max(cd4.rep.sig.5$P.value))) + geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
+print(g);dev.off()
+
+cd4.meta.gwas <- subset(volplot.data, !(disease=='none'))
+print(head(cd14.meta.gwas[order(cd14.meta.gwas$P.value),c(-1,-2,-3,-7,-8)],50))
