@@ -5,8 +5,9 @@
 FDIR=/scratch/t.cczysz/gsea_out/
 WDIR=/scratch/t.cczysz/gsea_test/
 
-sets="c1.all c2.cgp c2.cp.biocarta c2.cp.kegg c2.cp.reactome c3.mir c3.tft c4.cgn c4.cm c5.bp c5.cc c5.mf c6.all c7.all"
-study="rep.emtab2232 rep.GSE56045 meta.cd14 meta.cd14.all1.txt immvar.CD14 immvar.CD4 meta.cd4_all1.txt meta.cd4 rep.GenCord rep.GSE56580"
+sets="c1.all c2.cgp c2.cp.biocarta c2.cp.kegg c2.cp.reactome c3.mir c3.tft c4.cgn c4.cm c5.bp c5.cc c5.mf c6.all c7.all hg"
+#study="rep.emtab2232 rep.GSE56045 meta.cd14 meta.cd14.all1.txt immvar.CD14 immvar.CD4 meta.cd4_all1.txt meta.cd4 rep.GenCord rep.GSE56580"
+study="meta.cd14_rep1.txt meta.all.cd14_weight1.txt immvar.CD14 immvar.CD4 meta.all.cd4_weight1.txt meta.cd4_rep1.txt"
 
 cd $FDIR;
 for e in $(echo $sets); do

@@ -1,0 +1,269 @@
+immvar.CD14.rnk
+hr.all.v5.0.symbols.gmt
+hr.all.v5.0
+3311 [INFO ] Made Vdb dir JIT: /home/t.cri.cczysz/dec14
+3480 [INFO ] Begun importing: RankedList from: /home/t.cri.cczysz/redo/immvar.CD14.rnk
+7954 [INFO ] No ranked list collapsing was done .. using original as is
+to parse>/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt< got: [/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt]
+7964 [INFO ] Begun importing: GeneSetMatrix from: hr.all.v5.0.symbols.gmt
+4678 [WARN ] Duplicate GeneSet member: PRL	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4682 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4682 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4683 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4683 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4684 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4684 [WARN ] Duplicate GeneSet member: PRLR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4695 [WARN ] Duplicate GeneSet member: SSTR1	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4695 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4696 [WARN ] Duplicate GeneSet member: CCKBR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4696 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4705 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4705 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4706 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4706 [WARN ] Duplicate GeneSet member: SSTR2	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4707 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4707 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4708 [WARN ] Duplicate GeneSet member: SSTR3	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4708 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4709 [WARN ] Duplicate GeneSet member: SSTR4	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4710 [WARN ] Duplicate GeneSet member: SSTR5	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4710 [WARN ] Duplicate GeneSet member: TBXA2R	at edu.mit.broad.genome.objects.FSet.init(?:?)
+8036 [INFO ] Got gsets: 4 now preprocessing them ... min: 15 max: 500
+8147 [INFO ] Done preproc for smaller than: 15
+shuffleGeneSet for GeneSet 1/2 nperm: 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+Creating marker selection reports ...
+Creating FDR reports ...
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for positive phenotype
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for negative phenotype
+Creating global reports ...
+Done all reports!!
+Time taken: 15 secs
+immvar.CD4.rnk
+hr.all.v5.0.symbols.gmt
+hr.all.v5.0
+2237 [INFO ] Begun importing: RankedList from: /home/t.cri.cczysz/redo/immvar.CD4.rnk
+6165 [INFO ] No ranked list collapsing was done .. using original as is
+to parse>/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt< got: [/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt]
+6174 [INFO ] Begun importing: GeneSetMatrix from: hr.all.v5.0.symbols.gmt
+3960 [WARN ] Duplicate GeneSet member: PRL	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3964 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3964 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3965 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3965 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3966 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3966 [WARN ] Duplicate GeneSet member: PRLR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3977 [WARN ] Duplicate GeneSet member: SSTR1	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3977 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3978 [WARN ] Duplicate GeneSet member: CCKBR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3979 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3987 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3987 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3988 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3988 [WARN ] Duplicate GeneSet member: SSTR2	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3989 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3990 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3990 [WARN ] Duplicate GeneSet member: SSTR3	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3991 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3991 [WARN ] Duplicate GeneSet member: SSTR4	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3992 [WARN ] Duplicate GeneSet member: SSTR5	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3992 [WARN ] Duplicate GeneSet member: TBXA2R	at edu.mit.broad.genome.objects.FSet.init(?:?)
+6244 [INFO ] Got gsets: 4 now preprocessing them ... min: 15 max: 500
+6352 [INFO ] Done preproc for smaller than: 15
+shuffleGeneSet for GeneSet 1/2 nperm: 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+Creating marker selection reports ...
+Creating FDR reports ...
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for positive phenotype
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for negative phenotype
+Creating global reports ...
+Done all reports!!
+Time taken: 13 secs
+meta.all.cd14_weight1.txt.rnk
+hr.all.v5.0.symbols.gmt
+hr.all.v5.0
+9292 [INFO ] Begun importing: RankedList from: /home/t.cri.cczysz/redo/meta.all.cd14_weight1.txt.rnk
+2145 [INFO ] No ranked list collapsing was done .. using original as is
+to parse>/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt< got: [/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt]
+2154 [INFO ] Begun importing: GeneSetMatrix from: hr.all.v5.0.symbols.gmt
+2882 [WARN ] Duplicate GeneSet member: PRL	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2885 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2886 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2886 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2887 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2887 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2888 [WARN ] Duplicate GeneSet member: PRLR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2888 [WARN ] Duplicate GeneSet member: SSTR1	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2899 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2900 [WARN ] Duplicate GeneSet member: CCKBR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2900 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2909 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2909 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2910 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2910 [WARN ] Duplicate GeneSet member: SSTR2	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2911 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2911 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2912 [WARN ] Duplicate GeneSet member: SSTR3	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2912 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2913 [WARN ] Duplicate GeneSet member: SSTR4	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2918 [WARN ] Duplicate GeneSet member: SSTR5	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2918 [WARN ] Duplicate GeneSet member: TBXA2R	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2224 [INFO ] Got gsets: 4 now preprocessing them ... min: 15 max: 500
+2334 [INFO ] Done preproc for smaller than: 15
+shuffleGeneSet for GeneSet 1/2 nperm: 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+Creating marker selection reports ...
+Creating FDR reports ...
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for positive phenotype
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for negative phenotype
+Creating global reports ...
+Done all reports!!
+Time taken: 12 secs
+meta.all.cd4_weight1.txt.rnk
+hr.all.v5.0.symbols.gmt
+hr.all.v5.0
+4907 [INFO ] Begun importing: RankedList from: /home/t.cri.cczysz/redo/meta.all.cd4_weight1.txt.rnk
+7618 [INFO ] No ranked list collapsing was done .. using original as is
+to parse>/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt< got: [/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt]
+7627 [INFO ] Begun importing: GeneSetMatrix from: hr.all.v5.0.symbols.gmt
+2744 [WARN ] Duplicate GeneSet member: PRL	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2748 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2748 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2749 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2749 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2750 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2750 [WARN ] Duplicate GeneSet member: PRLR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2760 [WARN ] Duplicate GeneSet member: SSTR1	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2761 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2762 [WARN ] Duplicate GeneSet member: CCKBR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2762 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2770 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2771 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2771 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2772 [WARN ] Duplicate GeneSet member: SSTR2	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2772 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2773 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2773 [WARN ] Duplicate GeneSet member: SSTR3	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2774 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2774 [WARN ] Duplicate GeneSet member: SSTR4	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2775 [WARN ] Duplicate GeneSet member: SSTR5	at edu.mit.broad.genome.objects.FSet.init(?:?)
+2776 [WARN ] Duplicate GeneSet member: TBXA2R	at edu.mit.broad.genome.objects.FSet.init(?:?)
+7697 [INFO ] Got gsets: 4 now preprocessing them ... min: 15 max: 500
+7805 [INFO ] Done preproc for smaller than: 15
+shuffleGeneSet for GeneSet 1/2 nperm: 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+Creating marker selection reports ...
+Creating FDR reports ...
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for positive phenotype
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for negative phenotype
+Creating global reports ...
+Done all reports!!
+Time taken: 12 secs
+meta.cd14_rep1.txt.rnk
+hr.all.v5.0.symbols.gmt
+hr.all.v5.0
+0269 [INFO ] Begun importing: RankedList from: /home/t.cri.cczysz/redo/meta.cd14_rep1.txt.rnk
+4279 [INFO ] No ranked list collapsing was done .. using original as is
+to parse>/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt< got: [/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt]
+4289 [INFO ] Begun importing: GeneSetMatrix from: hr.all.v5.0.symbols.gmt
+4042 [WARN ] Duplicate GeneSet member: PRL	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4046 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4047 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4047 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4048 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4048 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4059 [WARN ] Duplicate GeneSet member: PRLR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4059 [WARN ] Duplicate GeneSet member: SSTR1	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4060 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4060 [WARN ] Duplicate GeneSet member: CCKBR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4061 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4069 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4070 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4070 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4071 [WARN ] Duplicate GeneSet member: SSTR2	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4071 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4072 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4073 [WARN ] Duplicate GeneSet member: SSTR3	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4073 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4074 [WARN ] Duplicate GeneSet member: SSTR4	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4076 [WARN ] Duplicate GeneSet member: SSTR5	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4076 [WARN ] Duplicate GeneSet member: TBXA2R	at edu.mit.broad.genome.objects.FSet.init(?:?)
+4360 [INFO ] Got gsets: 4 now preprocessing them ... min: 15 max: 500
+4466 [INFO ] Done preproc for smaller than: 15
+shuffleGeneSet for GeneSet 1/2 nperm: 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+Creating marker selection reports ...
+Creating FDR reports ...
+Done FDR reports for positive phenotype
+Done FDR reports for negative phenotype
+Creating global reports ...
+Done all reports!!
+Time taken: 13 secs
+meta.cd4_rep1.txt.rnk
+hr.all.v5.0.symbols.gmt
+hr.all.v5.0
+7379 [INFO ] Begun importing: RankedList from: /home/t.cri.cczysz/redo/meta.cd4_rep1.txt.rnk
+1219 [INFO ] No ranked list collapsing was done .. using original as is
+to parse>/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt< got: [/scratch/t.cczysz/gene_symbols/hr.all.v5.0.symbols.gmt]
+1229 [INFO ] Begun importing: GeneSetMatrix from: hr.all.v5.0.symbols.gmt
+3872 [WARN ] Duplicate GeneSet member: PRL	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3876 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3876 [WARN ] Duplicate GeneSet member: EDNRA	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3877 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3877 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3878 [WARN ] Duplicate GeneSet member: FSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3889 [WARN ] Duplicate GeneSet member: PRLR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3889 [WARN ] Duplicate GeneSet member: SSTR1	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3890 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3891 [WARN ] Duplicate GeneSet member: CCKBR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3891 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3900 [WARN ] Duplicate GeneSet member: EDNRB	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3900 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3901 [WARN ] Duplicate GeneSet member: LHCGR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3901 [WARN ] Duplicate GeneSet member: SSTR2	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3902 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3902 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3903 [WARN ] Duplicate GeneSet member: SSTR3	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3903 [WARN ] Duplicate GeneSet member: TSHR	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3904 [WARN ] Duplicate GeneSet member: SSTR4	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3907 [WARN ] Duplicate GeneSet member: SSTR5	at edu.mit.broad.genome.objects.FSet.init(?:?)
+3907 [WARN ] Duplicate GeneSet member: TBXA2R	at edu.mit.broad.genome.objects.FSet.init(?:?)
+1300 [INFO ] Got gsets: 4 now preprocessing them ... min: 15 max: 500
+1407 [INFO ] Done preproc for smaller than: 15
+shuffleGeneSet for GeneSet 1/2 nperm: 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+GeneSetCohorted: 501 / 1000
+GeneSetCohorted_scored: 501 / 1000
+Creating marker selection reports ...
+Creating FDR reports ...
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for positive phenotype
+WARNING: could not find max for: ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Done FDR reports for negative phenotype
+Creating global reports ...
+Done all reports!!
+Time taken: 13 secs
