@@ -1,4 +1,5 @@
 library(WGCNA)
+library(biomaRt)
 options(stringsAsFactors = FALSE);
 enableWGCNAThreads(nThreads=4)
 
@@ -34,6 +35,7 @@ identifyModules <- function(geneTree, dissTOM, minModuleSize=30) {
 
 performGOAnalysis <- function(expr, moduleColors) {
 
+	load('/group/stranger-lab/immvar_rep/mappings/annot.Robj')
 	geneNames.ens <- colnames(expr)
 	geneNames.sym <- as.character(annots[geneNames.ens, 'symbol_id'])
 	ensembl = useMart("ENSEMBL_MART_ENSEMBL",dataset="hsapiens_gene_ensembl", host="www.ensembl.org")
@@ -44,8 +46,7 @@ performGOAnalysis <- function(expr, moduleColors) {
 	geneNames.ens <- geneNames.ens[matchings]
 	moduleColors.go <- moduleColors[matchings]
 
-
-	GOenr <- GOenrichmentAnalysis(moduleColors.go, uni[, 3])
+	GOenr <- GOenrichmentAnalysis(moduleColors.go, uni[, 3], includeOffspring=F, nBestP=5, getTermDetails=F)
 }
 
 setwd('/group/stranger-lab/immvar/wgnca')
@@ -54,13 +55,18 @@ for (celltype in c('CD14', 'CD4')) {
 	exp.list <- loadExpression(celltype)
 for (i in seq(length(exp.list))) {
 
+	setwd('/group/stranger-lab/czysz/ImmVar')
 	pdf.prefix <- paste(celltype, names(exp.list)[i], sep='_')
 	print(pdf.prefix)
-	dissTOM <- createTOM(exp.list[[i]])
+	expr <- exp.list[[i]]
+
+	if (!file.exists(file=paste(pdf.prefix, 'dynCols.Robj', sep=''))) {
+	dissTOM <- createTOM(expr)
 	geneTree = hclust(as.dist(dissTOM), method = "average");
 
 	dynamicMods <- identifyModules(geneTree, dissTOM, 30)
 	dynamicColors = labels2colors(dynamicMods)
+	save(dissTOM, geneTree, dynamicMods, dynamicColors, file=paste(pdf.prefix, 'dynCols.Robj', sep='')) } else { load(file=paste(pdf.prefix, 'dynCols.Robj', sep='')) }
 
 	pdf(file=paste(pdf.prefix, 'dendogram.pdf', sep='.'), width=8, height=6)
 	plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
@@ -68,13 +74,15 @@ for (i in seq(length(exp.list))) {
 	addGuide = TRUE, guideHang = 0.05,
 	main = "Gene dendrogram and module colors")
 	dev.off()
-	
-	MEList = moduleEigengenes(expr, colors = dynamicColors)
+
+	if (!file.exists(file=paste(pdf.prefix, 'ME.Robj', sep=''))) {
+	MEList = moduleEigengenes(expr, colors = dynamicColors, excludeGrey=F, scale=F, impute=F)
 	MEs = MEList$eigengenes
 	# Calculate dissimilarity of module eigengenes
 	MEDiss = 1-cor(MEs);
 	# Cluster module eigengenes
 	METree = hclust(as.dist(MEDiss), method = "average");
+	save(MEs, MEDiss, METree, file=paste(pdf.prefix, 'ME.Robj', sep='')) } else { load(file=paste(pdf.prefix, 'ME.Robj', sep='')) }
 
 	pdf(file=paste(pdf.prefix, 'eigengene_tree.pdf', sep='.'), width=7, height=6)
 	plot(METree, main = "Clustering of module eigengenes",
@@ -84,7 +92,8 @@ for (i in seq(length(exp.list))) {
 	abline(h=MEDissThres, col = "red")
 	dev.off()
 
-	merge = mergeCloseModules(expr, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+	if (!file.exists(file=paste(pdf.prefix, 'merge.Robj', sep=''))) {
+	merge = mergeCloseModules(expr, dynamicColors, MEs=MEs, cutHeight = 0.25, verbose = 4, impute=F, iterate=F, trapErrors=T)
 	# The merged module colors
 	mergedColors = merge$colors;
 	# Eigengenes of the new merged modules:
@@ -94,20 +103,31 @@ for (i in seq(length(exp.list))) {
 	colorOrder = c("grey", standardColors(50));
 	moduleLabels = match(moduleColors, colorOrder)-1;
 	MEs = mergedMEs;
+	save(mergedColors, MEs, moduleColors, moduleLabels, file=paste(pdf.prefix, 'merge.Robj', sep='')) } else {load(file=paste(pdf.prefix, 'merge.Robj', sep=''))}
 
-	pdf(file=paste(pdf.prefix, 'dendogram.pdf', sep='.'), width=8, height=6)
+	pdf(file=paste(pdf.prefix, 'mergedendogram.pdf', sep='.'), width=8, height=6)
 	plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
 		c("Dynamic Tree Cut", "Merged dynamic"),
 		dendroLabels = FALSE, hang = 0.03,
 		addGuide = TRUE, guideHang = 0.05)
 	dev.off()
-	
+
+	GOenr <- performGOAnalysis(expr, moduleColors)
+	GOenr <- GOenr$bestPTerms[[4]]$enrichment
+	GOenr <- GOenr[, c(1,2,5,6,7,12,13)]
+	GOenr[, c(3,4)] <- signif(apply(GOenr[, c(3,4)], 2, as.numeric), 2)
+	colnames(GOenr) <- c('module', 'size', 'p-val', 'Bonf', 'nInTerm', 'ont', 'term name')
+	rownames(GOenr) <- NULL
+	save(GOenr, file=paste(pdf.prefix, 'GO.Robj', sep='.'))
+
+	if (F) {	
 	plotTOM <- dissTOM^7
 	diag(plotTOM) = NA
 	pdf(file=paste(pdf.prefix, 'TOM.cormat.pdf', sep='_'), width=9, height=9)
 	TOMplot(plotTOM, geneTree, moduleColors)
 	dev.off()
+	}
 
-	save.image(file=paste(pdf.prefix, 'Robj', sep='.'))
+	#save.image(file=paste(pdf.prefix, 'Robj', sep='.'))
 }
 }
