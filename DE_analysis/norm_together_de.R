@@ -32,17 +32,18 @@ MakeResiduals <- function(input.row,peer.factors) {
 	residuals(fit)
 }
 
-PerformDEAnalysis <- function(expr,samples, cau, afr) {
-	mod = model.matrix(~0+as.factor(samples) + cau + afr)
-        colnames(mod) <- c('Female', 'Male', 'Cau', 'Afr')
-        #mod0 = model.matrix(~0+rep(1,ncol(expr)))
-        mod0 = model.matrix(~0+ cau + afr)
+PerformDEAnalysis <- function(expr, samples) {
+	#mod = model.matrix(~0 + as.factor(samples) + cau + afr)
+	mod = model.matrix(~0 + as.factor(samples))
+        colnames(mod) <- c('Female', 'Male')
+        mod0 = model.matrix(~0 + rep(1, ncol(expr)))
+        #mod0 = model.matrix(~0 + as.factor(pop))
 
         svobj <- sva(expr, mod, mod0)
         modSv <- cbind(mod, svobj$sv)
 
         fit <- lmFit(expr, modSv)
-        contrast.matrix <- c(-1,1,0,0,rep(0, svobj$n.sv))
+        contrast.matrix <- c(-1, 1, rep(0, svobj$n.sv))
         contrast.fit <- contrasts.fit(fit, contrast.matrix)
         fit <- eBayes(contrast.fit)
 	return(fit)
@@ -141,8 +142,8 @@ FTest <- function(fit, exp_genes, expr.residuals, sex) {
 	
 }
 
-#for (cell.type in c("CD4","CD14")) {
-for (cell.type in c("CD14")) {
+for (cell.type in c("CD4","CD14")) {
+#for (cell.type in c("CD14")) {
 	#population <<- population
 	cell.type <<- cell.type
 	load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
@@ -178,9 +179,20 @@ for (cell.type in c("CD14")) {
 
 	sex <- phen[colnames(exp_genes),"Sex"]
 	
-	cau <- as.numeric(phen[colnames(exp_genes), "Race"]=="Caucasian")
-	afr <- as.numeric(phen[colnames(exp_genes), "Race"]=="African-American")
-	eb.fit <- PerformDEAnalysis(exp_genes, as.numeric(sex=="Male"), cau, afr)
+	#cau <- as.numeric(phen[colnames(exp_genes), "Race"]=="Caucasian")
+	#afr <- as.numeric(phen[colnames(exp_genes), "Race"]=="African-American")
+	pop <- as.character(phen[colnames(exp_genes), "Race"])
+
+	aird <- "ENSG00000150347.13"
+	pdf(file=paste('/group/stranger-lab/czysz/', cell.type, '_airdb2_density.pdf', sep=''))
+	plot(density(exp_genes[aird, !!(sex=="Male")]), col='blue', ylim=c(0,1.4), xlim=c(5,12), main=paste("Expression of AIRD5B in", cell.type))
+	lines(density(exp_genes[aird, !(sex=="Male")]), col='red')
+	legend('topright', c('Male', 'Female'), col=c('blue', 'red'), pch='-')
+	dev.off()
+
+	if (F) {	
+	eb.fit <- PerformDEAnalysis(exp_genes, as.numeric(sex=="Male"))
+	#eb.fit <- PerformDEAnalysis(exp_genes, as.numeric(sex=="Male"))
 	eb.fit$N <- as.numeric(rep(ncol(exp_genes), nrow(eb.fit)))
 	eb.fit$chr <- as.character(annots[rownames(eb.fit), "chr"])
 	eb.fit$symbol <- as.character(annots[rownames(eb.fit), "symbol_id"])
@@ -190,8 +202,12 @@ for (cell.type in c("CD14")) {
 	
 	pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/', paste(cell.type,'_volcano.pdf',sep=''),sep=''))
 	title <- paste(cell.type, sep=" ")
-	volcanoplot(eb.fit, cex=0.5, names=eb.fit$symbol, highlight=50, main=paste(title, "all genes"))
-	#g <- ggplot(data=eb.fit, aes(x=coefficients , y=p.value))
+	#volcanoplot(eb.fit, cex=0.5, names=eb.fit$symbol, highlight=50, main=paste(title, "all genes"))
+	eb.fit <- data.frame(eb.fit)
+	g <- ggplot(data=eb.fit, aes(x=coefficients , y=p.value))
+	g + geom_point() + 
+		geom_point(data=subset(eb.fit, chr=='chrY'), col='red') +
+		geom_point(data=subset(eb.fit, chr=='chrX'), col='blue')
 	#fit.sex <- eb.fit[(eb.fit$chr == 'chrY' | eb.fit$chr=='chrX'),] 
 	#fit.auto <- eb.fit[!(eb.fit$chr == 'chrY' | eb.fit$chr=='chrX'),] 
 	#volcanoplot(fit.sex, cex=0.5, names=fit.sex$symbol, highlight=50, main=paste(title, "X and Y genes"))
@@ -200,6 +216,7 @@ for (cell.type in c("CD14")) {
 	
 	#AnalyzeFit(eb.fit, exp_genes, sex)
 	#FTest(eb.fit,exp_genes,expr.residuals, sex)
+}
 
 	}
 #}

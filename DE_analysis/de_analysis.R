@@ -191,8 +191,13 @@ for (cell.type in c("CD4","CD14")) {
 	
 	}
 
+	arid = "ENSG00000150347.13"
+	plot(density(exp_genes[arid, !!sex]), col='blue')
+	lines(density(exp_genes[arid, !sex]), col='red')
+	dev.off()
+	q()
 	rownames(phen) <- phen$ImmVarID2
-	eb.fit <- PerformDEAnalysis(exp_genes, sex)
+#	eb.fit <- PerformDEAnalysis(exp_genes, sex)
 	eb.fit$N <- as.numeric(rep(ncol(exp_genes), nrow(eb.fit)))
 	eb.fit$chr <- as.character(annots[rownames(eb.fit), "chr"])
 	eb.fit$symbol <- as.character(annots[rownames(eb.fit), "symbol_id"])
