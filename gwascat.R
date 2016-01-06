@@ -5,6 +5,7 @@ if (!(require(gwascat))) {
 
 library(gwascat)
 library(ggplot2)
+library(reshape2)
 load('/group/stranger-lab/immvar_rep/mappings/annot.Robj')
 
 if (file.exists(file='/group/stranger-lab/czysz/disease_genes.Robj')) {
@@ -16,7 +17,7 @@ data(gwrngs38) # load gwas data
 inflam.toi <- c("Ankylosing spondylitis", "Crohn's disease", "Ulcerative colitis", "Multiple sclerosis", "Type 1 diabetes", "Rheumatoid arthritis", "Primary biliary cirrhosis", "Systemic lupus erythematosus", "Psoriasis") # save trait of interest
 metab.toi <- c('Type 2 diabetes', 'Obesity', 'Weight', "HDL cholesterol", "LDL cholesterol", "Cholesterol, total", "Body mass index")
 neuro.toi <- c("Alzheimer's disease", 'Autism', 'Bipolar disorder', "Bipolar disorder and schizophrenia", "Cognitive performance", "Cognitive test performance", "Parkinson's disease", "Schizophrenia")
-cancer.toi <- c("Bladder cancer", "Breast cancer", "Colorectal cancer", "Ovarian cancer", "Prostate cancer", "Thyroid cancer", "Testicular cancer", "Testicular germ cell cancer", "Testicular germ cell tumor")
+cancer.toi <- c("Bladder cancer", "Breast cancer", "Colorectal cancer", "Endometrial cancer", "Esophageal cancer", "Esophageal cancer and gastric cancer", "Glioma", "Lung adenocarcinoma", "Lung cancer", "Non-small cell lung cancer", "Ovarian cancer", "Pancreatic cancer", "Prostate cancer", "Thyroid cancer", "Testicular cancer", "Testicular germ cell cancer", "Testicular germ cell tumor", "Upper aerodigestive tract cancers", "Urinary bladder cancer")
 
 getGenes <- function(toi.list) {
 	gene.list <- list()
@@ -63,7 +64,10 @@ disease.genes = list(Inflammatory=inflam.genes,
 	Cancer=cancer.genes)
 
 save(disease.genes, file='/group/stranger-lab/czysz/disease_genes.Robj') } else {load(file='/group/stranger-lab/czysz/disease_genes.Robj') }
+
+disease.gene.pairs <- melt(unlist(disease.genes))
 library(limma)
+library(reshape2)
 load('/group/stranger-lab/immvar_data/fit.joint.CD14.Robj')
 joint.cd14.fit <- data.frame(eb.fit)
 joint.cd14.fit$q.value <- p.adjust(joint.cd14.fit$p.value, method="fdr")
@@ -166,6 +170,11 @@ cd14.rep.meta <- cbind(cd14.rep.meta,
 cd14.rep.meta$chr <- as.character(cd14.rep.meta$chr)
 cd14.rep.sig.5 <- subset(cd14.rep.meta, q.value<0.05)
 
+
+annotateGenes <- function(x) {
+	rownames(disease.gene.pairs)[disease.gene.pairs==x]
+}
+
 cd14.meta.disease.genes <- rep('none', nrow(cd14.rep.meta))
 cd14.meta.immune <- cd14.rep.meta$gene%in%unique(unlist(disease.genes[[1]]))
 cd14.meta.metab <- cd14.rep.meta$gene%in%unique(unlist(disease.genes[[2]]))
@@ -199,6 +208,24 @@ print(g);dev.off()
 cd14.meta.gwas <- subset(volplot.data, !(disease=='none'))
 print(head(cd14.meta.gwas[order(cd14.meta.gwas$P.value),c(-1:-3,-7,-8)],50))
 
+cd14.pval <- rep(0, nrow(disease.gene.pairs))
+cd14.qval <- rep(0, nrow(disease.gene.pairs))
+cd14.zscore <- rep(0, nrow(disease.gene.pairs))
+for (g in seq(nrow(disease.gene.pairs))) {
+	#entry <- cd14.rep.meta[cd14.rep.meta$gene==disease.gene.pairs[g], ]
+	entry <- subset(cd14.rep.meta, gene==disease.gene.pairs[g,1])
+	if (nrow(entry) > 0) {
+	cd14.pval[g] <- signif(entry$P.value, 3)
+	cd14.qval[g] <- signif(entry$q.value, 3)
+	cd14.zscore[g] <- entry$Zscore } else {
+	cd14.pval[g] <- NA
+	cd14.qval[g] <- NA
+	cd14.zscore[g] <- NA }
+}
+
+disease.genes.cd14 <- disease.gene.pairs
+disease.genes.cd14 <- cbind(disease.genes.cd14, pval=cd14.pval, qval=cd14.qval, zscore=cd14.zscore)
+disease.genes.cd14 <- disease.genes.cd14[order(disease.genes.cd14$pval),]
 cd4.rep.meta <- cbind(cd4.rep.meta,
         q.value=p.adjust(cd4.rep.meta$P.value, method='fdr'),
         rank=rank(cd4.rep.meta$P.value) / nrow(cd4.rep.meta),
@@ -238,5 +265,27 @@ g <- g + geom_point() + labs(title='CD4 All Meta', x='Zscore', y='Pvalue') +
         geom_abline(slope=0, intercept=-log10(max(cd4.rep.sig.5$P.value))) + geom_point(data=subset(volplot.data, !(disease=='none')), col='green')
 print(g);dev.off()
 
+cd4.pval <- rep(0, nrow(disease.gene.pairs))
+cd4.qval <- rep(0, nrow(disease.gene.pairs))
+cd4.zscore <- rep(0, nrow(disease.gene.pairs))
+for (g in seq(nrow(disease.gene.pairs))) {
+	#entry <- cd14.rep.meta[cd14.rep.meta$gene==disease.gene.pairs[g], ]
+	entry <- subset(cd4.rep.meta, gene==disease.gene.pairs[g,1])
+	if (nrow(entry) > 0) {
+	cd4.pval[g] <- signif(entry$P.value, 3)
+	cd4.qval[g] <- signif(entry$q.value, 3)
+	cd4.zscore[g] <- entry$Zscore } else {
+	cd4.pval[g] <- NA
+	cd4.qval[g] <- NA
+	cd4.zscore[g] <- NA }
+}
+
+disease.genes.cd4 <- disease.gene.pairs
+disease.genes.cd4 <- cbind(disease.genes.cd4, pval=cd4.pval, qval=cd4.qval, zscore=cd4.zscore)
+disease.genes.cd4 <- disease.genes.cd4[order(disease.genes.cd4$pval),]
 cd4.meta.gwas <- subset(volplot.data, !(disease=='none'))
 print(head(cd14.meta.gwas[order(cd14.meta.gwas$P.value),c(-1,-2,-3,-7,-8)],50))
+
+shared.disease.genes <- intersect(subset(disease.genes.cd4, qval<0.05)$value, subset(disease.genes.cd14, qval<0.05)$value)
+y <- subset(disease.genes.cd14, value%in%shared.disease.genes)
+x <- subset(disease.genes.cd4, value%in%shared.disease.genes)
