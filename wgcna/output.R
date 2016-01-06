@@ -53,8 +53,7 @@ for (j in seq(length(colnames(cd14.intersect.matrix)))) {
 }
 
 cd14.sharing.matrix <- cd14.intersect.matrix/cd14.union.matrix
-heatmap.2(cd14.sharing.matrix, Rowv=F, Colv=F, 
-	cellnote=trunc(100*cd14.sharing.matrix), trace='none', notecex=0.5,
+heatmap.2(cd14.sharing.matrix, margins=c(7,7), key=F, Rowv=F, Colv=F, cexRow=0.8, cexCol=0.8, notecol='black', cellnote=trunc(100*cd14.sharing.matrix), trace='none', notecex=0.5,
 	ylab='Male', xlab='Female', main='CD14')
 
 cd4.intersect.matrix <- matrix(0, nrow=length(unique(gene.colors[,4])),ncol=length(unique(gene.colors[,3])))
@@ -80,6 +79,6 @@ for (j in seq(length(colnames(cd4.intersect.matrix)))) {
 }
 
 cd4.sharing.matrix <- cd4.intersect.matrix/cd4.union.matrix
-heatmap.2(cd4.sharing.matrix, Rowv=F, Colv=F, cellnote=trunc(100*cd4.sharing.matrix), trace='none', notecex=0.5,
+heatmap.2(cd4.sharing.matrix, margins=c(7,7), key=F, Rowv=F, Colv=F, cexRow=0.8, cexCol=0.8, notecol='black', cellnote=trunc(100*cd4.sharing.matrix), trace='none', notecex=0.5,
 	ylab='Male', xlab='Female', main='CD4')
 dev.off()
