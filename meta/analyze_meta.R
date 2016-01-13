@@ -15,6 +15,43 @@ makePlots <- function(fit, cell.type, annots) {
 	g + geom_point()
 }
 
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+	# Code from R cookbook
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
 xesc.genes <- read.table(file='/home/t.cri.cczysz/likely_escape_genes.txt', header=F)
 xesc.genes <- as.character(xesc.genes[,1])
 ########################################
@@ -31,8 +68,8 @@ sig.5 <- max(joint.cd14.sig$p.value)
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/immvar.cd14.fc.pdf', width=11, height=8)
 #plot(density(joint.cd14.fit$coefficients), main='CD14 density of log2 fold change for all genes', xlab='log2FC', ylab='')
 #plot(density(joint.cd14.sig$coefficients), main='CD14 density of log2 fold change for significant genes', xlab='log2FC', ylab='')
-ggplot(data.frame(log2fc = joint.cd14.fit$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD14 log2FC distribution of all genes', x='log2FC', y='')
-ggplot(data.frame(log2fc = joint.cd14.sig$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD14 log2FC distribution of significant genes', x='log2FC', y='')
+ggplot(data.frame(log2fc = joint.cd14.fit$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD14+ ImmVar log2FC distribution of all genes', x='log2FC', y='')
+ggplot(data.frame(log2fc = joint.cd14.sig$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD14+ ImmVar log2FC distribution of significant genes', x='log2FC', y='')
 
 dev.off()
 
@@ -51,7 +88,7 @@ cd14.female <- cd14.female[mixedorder(names(cd14.female))]
 cd14.bar.df <- data.frame(chr=names(cd14.male), male=as.numeric(cd14.male), female=as.numeric(cd14.female))
 cd14.bar.df$chr = factor(mixedsort(cd14.bar.df$chr), levels=as.character(mixedsort(cd14.bar.df$chr)))
 g <- ggplot(data=melt(cd14.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='CD14+ Sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') +
+g + geom_bar(stat='identity') + labs(title='CD14+ ImmVar sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') +
 	guides(fill=guide_legend(title="Sex")) + 
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 
@@ -63,11 +100,11 @@ cd14.bar.df$female <- cd14.bar.df$female / cd14.bar.allcount
 #cd14.bar.df$chr = factor(mixedsort(cd14.bar.df$chr), levels=as.character(mixedsort(cd4.bar.df$chr)))
 #cd14.bar.df$count = cd14.bar.df$count[mixedorder(cd14.bar.df$chr)]
 g <- ggplot(data=melt(cd14.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='CD14+ Sex-stratified per-chromosome percentage of significant genes', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
+g + geom_bar(stat='identity') + labs(title='CD14+ ImmVar sex-stratified per-chromosome percentage of significant genes', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 dev.off()
 
-pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','qq_CD14.pdf',sep=''))
+pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','qq_CD14.pdf',sep=''), width=11, height=8)
 qqplot.data <- data.frame(obs=-log10(sort(joint.cd14.fit$p.value)),
 	exp=-log10(seq(length(joint.cd14.fit$p.value))/length(joint.cd14.fit$p.value)),
 	chr=as.character(joint.cd14.fit$chr[order(joint.cd14.fit$rank)]),
@@ -75,13 +112,13 @@ qqplot.data <- data.frame(obs=-log10(sort(joint.cd14.fit$p.value)),
 qqplot.data$chr <- as.character(qqplot.data$chr)
 qqplot.data[!(qqplot.data$chr=='chrY' | qqplot.data$chr=='chrX'), 'chr'] <- 'auto'
 g <- ggplot(data=qqplot.data, aes(x=exp, y=obs, color=chr))
-g + geom_point() + labs(title="CD14", x='Expected', y='Observed') + 
+g + geom_point() + labs(title="CD14+ ImmVar quantile quantile plot", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
 	geom_abline()
 dev.off()
 
-pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD14.pdf',sep=''))
+pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD14.pdf',sep=''), width=12, height=8)
 volplot.data <- data.frame(logFC=joint.cd14.fit$coefficients,
 	pval=-log10(joint.cd14.fit$p.value),
 	chr=as.character(joint.cd14.fit$chr),
@@ -90,12 +127,19 @@ volplot.data <- data.frame(logFC=joint.cd14.fit$coefficients,
 volplot.data$chr <- as.character(volplot.data$chr)
 volplot.data[!(volplot.data$chr=='chrY' | volplot.data$chr=='chrX'),'chr'] <- 'auto'
 g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
-g + geom_point() + labs(title='ImmVar CD14', x='log2FC', y='-log10(pvalue)') + 
+p1 <- g + geom_point() + labs(title='CD14+ ImmVar volcano plot', x='log2FC', y='-log10(pvalue)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
+	geom_abline(slope=0, intercept=-log10(sig.5)) + annotate('rect',xmin=-1, xmax=1, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") 
+g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
+p2 <- g + geom_point() + labs(title='CD14+ ImmVar zoom volcano plot', x='log2FC', y='-log10(pvalue)') + 
+	scale_color_manual(values=c('black', 'red','blue'),
+		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
+	scale_x_continuous(limits = c(-1, 1)) + scale_y_continuous(limits = c(0, 30)) +
 	geom_abline(slope=0, intercept=-log10(sig.5))
+multiplot(p1, p2, cols=2)
 g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=xesc))
-g + geom_point() + labs(title='ImmVar CD14 X-inactivation Escape Genes', x='log2FC', y='-log10(pvalue)') + 
+g + geom_point() + labs(title='CD14+ ImmVar volcano plot X-inactivation Escape Genes', x='log2FC', y='-log10(pvalue)') + 
 	geom_abline(slope=0, intercept=-log10(sig.5)) + geom_point(data=subset(volplot.data, xesc==T),aes(color=xesc), col='green')
 dev.off()
 if (F) {
@@ -112,13 +156,13 @@ cd14.bar.df <- data.frame(chr=names(table(joint.cd14.sig$chr)), count=as.numeric
 cd14.bar.df$chr = factor(mixedsort(cd14.bar.df$chr), levels=as.character(mixedsort(cd14.bar.df$chr)))
 cd14.bar.df$count = cd14.bar.df$count[mixedorder(cd14.bar.df$chr)]
 g <- ggplot(data=cd14.bar.df, aes(x=chr, y=count, fill=chr))
-g + geom_bar(stat='identity') + labs(title='CD14 - Per-chromosome count of significant genes', x='chromosome', y='count') + ylim(0,175)
+g + geom_bar(stat='identity') + labs(title='CD14+ ImmVar per-chromosome count of significant genes', x='chromosome', y='count') + ylim(0,175)
 
 cd14.bar.df <- data.frame(chr=names(table(joint.cd14.sig$chr)), count=as.numeric(table(joint.cd14.sig$chr))/as.numeric(table(joint.cd14.fit$chr))[-23])
 cd14.bar.df$chr = factor(mixedsort(cd14.bar.df$chr), levels=as.character(mixedsort(cd14.bar.df$chr)))
 cd14.bar.df$count = cd14.bar.df$count[mixedorder(cd14.bar.df$chr)]
 g <- ggplot(data=cd14.bar.df, aes(x=chr, y=count, fill=chr))
-g + geom_bar(stat='identity') + labs(title='CD14 - Per-chromosome percentage of significant genes', x='chromosome', y='count') + ylim(0,0.5)
+g + geom_bar(stat='identity') + labs(title='CD14+ ImmVar per-chromosome percentage of significant genes', x='chromosome', y='count') + ylim(0,0.5)
 dev.off()
 
 load('/group/stranger-lab/immvar_data/fit.joint.CD4.Robj')
@@ -134,8 +178,8 @@ sig.5 <- max(joint.cd14.sig$p.value)
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/immvar.cd4.fc.pdf', width=11, height=8)
 #plot(density(joint.cd14.fit$coefficients), main='CD14 density of log2 fold change for all genes', xlab='log2FC', ylab='')
 #plot(density(joint.cd14.sig$coefficients), main='CD14 density of log2 fold change for significant genes', xlab='log2FC', ylab='')
-ggplot(data.frame(log2fc = joint.cd4.fit$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD4 log2FC distribution of all genes', x='log2FC', y='')
-ggplot(data.frame(log2fc = joint.cd4.sig$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD4 log2FC distribution of significant genes', x='log2FC', y='')
+ggplot(data.frame(log2fc = joint.cd4.fit$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD4+ ImmVar log2FC distribution of all genes', x='log2FC', y='')
+ggplot(data.frame(log2fc = joint.cd4.sig$coefficients), aes(x=log2fc)) + geom_density() + labs(title='CD4+ ImmVar  log2FC distribution of significant genes', x='log2FC', y='')
 
 dev.off()
 
@@ -154,7 +198,7 @@ cd4.female <- cd4.female[mixedorder(names(cd4.female))]
 cd4.bar.df <- data.frame(chr=names(cd4.male), male=as.numeric(cd4.male), female=as.numeric(cd4.female))
 cd4.bar.df$chr = factor(mixedsort(cd4.bar.df$chr), levels=as.character(mixedsort(cd4.bar.df$chr)))
 g <- ggplot(data=melt(cd4.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='CD4+ Sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') + guides(fill=guide_legend(title="Sex")) + 
+g + geom_bar(stat='identity') + labs(title='CD4+ ImmVar sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') + guides(fill=guide_legend(title="Sex")) + 
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 
 cd4.bar.allcount <- table(joint.cd4.fit$chr)
@@ -167,10 +211,10 @@ cd4.bar.df$male[23] <- 0
 #cd4.bar.df$chr = factor(mixedsort(cd4.bar.df$chr), levels=as.character(mixedsort(cd4.bar.df$chr)))
 #cd4.bar.df$count = cd4.bar.df$count[mixedorder(cd4.bar.df$chr)]
 g <- ggplot(data=melt(cd4.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='CD4+ Sex-stratified per-chromosome percentage of significant genes', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
+g + geom_bar(stat='identity') + labs(title='CD4+ ImmVar sex-stratified per-chromosome percentage of significant genes', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 dev.off()
-pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','qq_CD4.pdf',sep=''))
+pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','qq_CD4.pdf',sep=''), width=12, height=8)
 qqplot.data <- data.frame(obs=-log10(sort(joint.cd4.fit$p.value)),
 	exp=-log10(seq(length(joint.cd4.fit$p.value))/length(joint.cd4.fit$p.value)),
 	chr=as.character(joint.cd14.fit$chr[order(joint.cd14.fit$rank)]),
@@ -179,13 +223,13 @@ qqplot.data$chr <- as.character(qqplot.data$chr)
 qqplot.data[!(qqplot.data$chr=='chrY' | qqplot.data$chr=='chrX'),'chr'] <- 'auto'
 
 g <- ggplot(data=qqplot.data, aes(x=exp, y=obs, color=chr))
-g + geom_point() + labs(title="CD4+", x='Expected', y='Observed') + 
+g + geom_point() + labs(title="CD4+ ImmVar quantile quantile plot", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black','red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
 	geom_abline()
 dev.off()
 
-pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD4.pdf',sep=''))
+pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD4.pdf',sep=''), width=12, height=10)
 qqplot.data <- data.frame(logFC=joint.cd4.fit$coefficients,
 	pval=-log10(joint.cd4.fit$p.value),
 	chr=joint.cd4.fit$chr,
@@ -194,18 +238,19 @@ qqplot.data <- data.frame(logFC=joint.cd4.fit$coefficients,
 qqplot.data$chr <- as.character(qqplot.data$chr)
 qqplot.data[!(qqplot.data$chr=='chrY' | qqplot.data$chr=='chrX'),'chr'] <- 'auto'
 g <- ggplot(data=qqplot.data, aes(x=logFC, y=pval, color=chr))
-g + geom_point() + labs(title='ImmVar CD4', x='log2FC', y='-log10(pvalue)') + 
+p1 <- g + geom_point() + labs(title='CD4+ ImmVar volcano plot', x='log2FC', y='-log10(pvalue)') + 
 	scale_color_manual(values=c('black','red','blue'),
 		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
-	geom_abline(slope=0, intercept=-log10(sig.5[1]))
+	geom_abline(slope=0, intercept=-log10(sig.5[1])) + annotate('rect', xmin=-1, xmax=1, ymin=0, ymax=30, alpha=0.5) + theme(legend.position="none") 
 
-g + geom_point() + labs(title='ImmVar CD4-Zoomed', xlab='log2FC', ylab='-log10(pvalue)') + 
+p2 <- g + geom_point() + labs(title='CD4+ ImmVar zoom volcano plot', xlab='log2FC', ylab='-log10(pvalue)') + 
 	scale_color_manual(values=c('black','red','blue'),
 		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
 	scale_x_continuous(limits = c(-1, 1)) + scale_y_continuous(limits = c(0, 30)) +
-	geom_abline(slope=0, intercept=-log10(sig.5[1]))
+	geom_abline(slope=0, intercept=-log10(sig.5[1])) 
+multiplot(p1, p2, cols=2)
 g <- ggplot(data=qqplot.data, aes(x=logFC, y=pval, color=xesc))
-g + geom_point() + labs(title='ImmVar CD4+ X-inactivation Escape Genes', x='log2FC', y='-log10(pvalue)') + 
+g + geom_point() + labs(title='CD4+ ImmVar volcano plot X-inactivation Escape Genes', x='log2FC', y='-log10(pvalue)') + 
 	geom_abline(slope=0, intercept=-log10(sig.5)) + geom_point(data=subset(qqplot.data, xesc==T),aes(color=xesc), col='green')
 dev.off()
 
@@ -242,13 +287,13 @@ cd4.bar.df <- data.frame(chr=names(table(joint.cd4.sig$chr)), count=as.numeric(t
 cd4.bar.df$chr = factor(mixedsort(cd4.bar.df$chr), levels=as.character(mixedsort(cd4.bar.df$chr)))
 cd4.bar.df$count = cd4.bar.df$count[mixedorder(cd4.bar.df$chr)]
 g <- ggplot(data=cd4.bar.df, aes(x=chr, y=count, fill=chr))
-g + geom_bar(stat='identity') + labs(title='CD4 - Per-chromosome count of significant genes', x='chromosome', y='count') + ylim(0,175)
+g + geom_bar(stat='identity') + labs(title='CD4+ ImmVar per-chromosome count of significant genes', x='chromosome', y='count') + ylim(0,175)
 
 cd4.bar.df <- data.frame(chr=names(table(joint.cd4.sig$chr)), count=as.numeric(table(joint.cd4.sig$chr))/as.numeric(table(joint.cd4.fit$chr))[-23])
 cd4.bar.df$chr = factor(mixedsort(cd14.bar.df$chr), levels=as.character(mixedsort(cd4.bar.df$chr)))
 cd4.bar.df$count = cd4.bar.df$count[mixedorder(cd4.bar.df$chr)]
 g <- ggplot(data=cd4.bar.df, aes(x=chr, y=count, fill=chr))
-g + geom_bar(stat='identity') + labs(title='CD4 - Per-chromosome percentage of significant genes', x='chromosome', y='count') + ylim(0,0.5)
+g + geom_bar(stat='identity') + labs(title='CD4+ ImmVar per-chromosome percentage of significant genes', x='chromosome', y='percent') + ylim(0,0.5)
 dev.off()
 ###############################################
 # Process meta-analysis of replication datasets
@@ -284,7 +329,7 @@ cd14.bar.df <- data.frame(chr=mixedsort(names(table(cd14.rep.sig.5$chr))), male=
 cd14.bar.df$chr = factor(mixedsort(cd14.bar.df$chr), levels=as.character(mixedsort(cd14.bar.df$chr)))
 library(reshape2)
 g <- ggplot(data=melt(cd14.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='CD14+ Sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') + guides(fill=guide_legend(title="Sex")) + 
+g + geom_bar(stat='identity') + labs(title='CD14+ meta-analysis sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') + guides(fill=guide_legend(title="Sex")) + 
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 
 cd14.bar.allcount <- as.numeric(table(cd14.rep.meta$chr))[mixedorder(names(table(cd14.rep.meta$chr)))]
@@ -295,27 +340,34 @@ cd14.bar.df$female[23] <- 0
 #cd14.bar.df$chr = factor(mixedsort(cd14.bar.df$chr), levels=as.character(mixedsort(cd4.bar.df$chr)))
 #cd14.bar.df$count = cd14.bar.df$count[mixedorder(cd14.bar.df$chr)]
 g <- ggplot(data=melt(cd14.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='CD14 Sex-stratified per-chromosome percentage of significant genes', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
+g + geom_bar(stat='identity') + labs(title='CD14+ meta-analysis sex-stratified per-chromosome percentage of significant genes', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 dev.off()
 
-pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14.meta.qq.pdf')
+pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14.meta.qq.pdf', width=12, height=8)
 g <- ggplot(data=cd14.rep.meta, aes(x=-log10(seq(nrow(cd14.rep.meta))/nrow(cd14.rep.meta)), y=-log10(sort(P.value)), color=replace(cd14.rep.meta$chr, !(cd14.rep.meta$chr=='chrX' | cd14.rep.meta$chr=='chrY'), 'auto')[order(cd14.rep.meta$rank)]))
-g + geom_point() + labs(title="CD14 All Meta", x='Expected', y='Observed') + 
+g + geom_point() + labs(title="CD14+ meta-analysis quantile-quantile plot", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
 	geom_abline()
 dev.off()
 
-pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14.meta.volcano.pdf')
+pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14.meta.volcano.pdf', width=12, height=10)
 g <- ggplot(data=cd14.rep.meta, aes(x=Zscore, y=-log10(P.value), color=replace(cd14.rep.meta$chr, !(cd14.rep.meta$chr=='chrX' | cd14.rep.meta$chr=='chrY'), 'auto'))) 
-g + geom_point() + labs(main='CD14 All Meta', x='Expected', y='Observed') +
+p1 <- g + geom_point() + labs(title ='CD14+ meta-analysis volcano plot', x='Zscore', y='-log10(p-value)') +
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
-	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value))
+	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value)) + annotate("rect", xmin=-10, xmax=10, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") 
+
+p2 <- g + geom_point() + labs(title ='CD14+ meta-analysis zoom volcano plot', x='Zscore', y='-log10(p-value)') +
+	scale_color_manual(values=c('black', 'red','blue'),
+		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
+	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value)) +
+	scale_x_continuous(limits = c(-10, 10)) + scale_y_continuous(limits = c(0, 30)) 
+multiplot(p1,p2, cols=2)
 
 g <- ggplot(data=cd14.rep.meta, aes(x=Zscore, y=-log10(P.value), color=xesc))
-g + geom_point() + labs(main='CD14 All Meta', x='Expected', y='Observed') + geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value))
+g + geom_point() + labs(title ='CD14+ meta-analysis volcano plot X-inactivation escape genes', x='Zscore', y='-log10(p-value)') + geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value))
 dev.off()
 cd4.rep.meta <- cbind(cd4.rep.meta, 
 	q.value=p.adjust(cd4.rep.meta$P.value, method='fdr'),
@@ -326,9 +378,9 @@ cd4.rep.meta$chr <- as.character(cd4.rep.meta$chr)
 cd4.rep.meta$xesc <- cd4.rep.meta$gene%in%xesc.genes
 cd4.rep.sig.5 <- subset(cd4.rep.meta, q.value<0.05)
 
-pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4.meta.qq.pdf')
+pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4.meta.qq.pdf', width=12, height=8)
 g <- ggplot(data=cd4.rep.meta, aes(x=-log10(seq(nrow(cd4.rep.meta))/nrow(cd4.rep.meta)), y=-log10(sort(P.value)), color=replace(cd4.rep.meta$chr, !(cd4.rep.meta$chr=='chrX' | cd4.rep.meta$chr=='chrY'), 'auto')[order(cd4.rep.meta$rank)]))
-g + geom_point() + labs(title="CD4 All Meta", x='Expected', y='Observed') + 
+g + geom_point() + labs(title="CD4+ quantile quantile plot", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
 	geom_abline()
@@ -350,7 +402,7 @@ cd4.female <- cd4.female[mixedorder(names(cd4.female))]
 cd4.bar.df <- data.frame(chr=names(cd4.male), male=as.numeric(cd4.male), female=as.numeric(cd4.female))
 cd4.bar.df$chr = factor(mixedsort(cd4.bar.df$chr), levels=as.character(mixedsort(cd4.bar.df$chr)))
 g <- ggplot(data=melt(cd4.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='CD4 Sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') + guides(fill=guide_legend(title='Sex')) + 
+g + geom_bar(stat='identity') + labs(title='CD4+ meta-analysis sex-stratified per-chromosome count of significant genes', x='chromosome', y='count') + guides(fill=guide_legend(title='Sex')) + 
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 
 cd4.bar.allcount <- c(table(cd4.rep.meta$chr), chrM=0)
@@ -366,15 +418,22 @@ g + geom_bar(stat='identity') + labs(title='CD4+ Sex-stratified per-chromosome p
 	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
 dev.off()
 
-pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4.meta.volcano.pdf')
+pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4.meta.volcano.pdf', width=12, height=10)
 #g <- ggplot(data=cd4.rep.meta, aes(x=Zscore, y=-log10(P.value), color=replace(cd4.rep.meta$chr, !(cd4.rep.meta$chr=='chrX' | cd4.rep.meta$chr=='chrY'), 'auto'))) 
 g <- ggplot(data=cd4.rep.meta, aes(x=Zscore, y=-log10(P.value), color=replace(chr, !(chr=='chrX' | chr=='chrY'), 'auto'))) 
-g + geom_point() + labs(main='CD4 All Meta', x='Zscore', y='-log10(P.value)') +
+p1 <- g + geom_point() + labs(title ='CD4+ meta-analysis volcano plot', x='Zscore', y='-log10(P.value)') +
+	scale_color_manual(values=c('black', 'red','blue'),
+		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) +
+	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value)) + annotate("rect", xmin=-10, xmax=10, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") 
+
+p2 <- g + geom_point() + labs(title ='CD4+ meta-analysis zoom volcano plot', x='Zscore', y='-log10(p-value)') +
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
-	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value))
+	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value)) + 
+	scale_x_continuous(limits = c(-10, 10)) + scale_y_continuous(limits = c(0, 30)) 
+multiplot(p1, p2, cols=2)
 g <- ggplot(data=cd4.rep.meta, aes(x=Zscore, y=-log10(P.value), color=xesc))
-g + geom_point() + labs(main='CD4 Meta-analysis X-inactivation escaping genes', x='Expected', y='Observed') + geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value))
+g + geom_point() + labs(title ='CD4+ meta-analysis volcano plot X-inactivation escaping genes', x='Zscore', y='-log10(p-value)') + geom_abline(slope=0, intercept=max(cd4.rep.sig.5$P.value))
 dev.off()
 
 rep.cd4.sig <- list()
