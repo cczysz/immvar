@@ -19,7 +19,7 @@ loadExpression <- function(celltype) {
 
 createTOM <- function(expr) {
 	powers = c(c(1:10), seq(from = 12, to=20, by=2))
-	sft = pickSoftThreshold(expr, powerVector = powers, verbose = 5)
+	sft = pickSoftThreshold(expr, powerVector = powers, verbose = 5, blockSize=25000)
 	softPower = which(-sign(sft$fitIndices[,3])*sft$fitIndices[,2]>0.8)[1];
 	adjacency = adjacency(expr, power = softPower);
 	dissTOM = 1-TOMsimilarity(adjacency)
@@ -49,7 +49,7 @@ performGOAnalysis <- function(expr, moduleColors) {
 	GOenr <- GOenrichmentAnalysis(moduleColors.go, uni[, 3], includeOffspring=F, nBestP=5, getTermDetails=F)
 }
 
-setwd('/group/stranger-lab/immvar/wgnca')
+setwd('/group/stranger-lab/immvar/wgcna')
 
 for (celltype in c('CD14', 'CD4')) {
 	exp.list <- loadExpression(celltype)

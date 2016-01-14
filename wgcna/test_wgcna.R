@@ -22,7 +22,7 @@ loadExpression <- function(celltype) {
 
 createTOM <- function(expr) {
 	powers = c(c(1:10), seq(from = 12, to=20, by=2))
-	sft = pickSoftThreshold(expr, powerVector = powers, verbose = 5)
+	sft = pickSoftThreshold(expr, powerVector = powers, verbose = 5, blockSize=25000)
 	softPower = which(-sign(sft$fitIndices[,3])*sft$fitIndices[,2]>0.8)[1];
 	adjacency = adjacency(expr, power = softPower);
 	dissTOM = 1-TOMsimilarity(adjacency)
