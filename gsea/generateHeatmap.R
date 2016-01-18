@@ -1,7 +1,7 @@
 library(gplots)
 
 my_palette <- colorRampPalette(c("white","red"))(n = 10);
-gene_set_classes=c("c1.all","c2.cgp","c2.cp.biocarta","c2.cp.kegg","c2.cp.reactome","c3.mir","c3.tft","c4.cgn","c4.cm","c5.bp","c5.cc","c5.mf","c6.all","c7.all");
+gene_set_classes=c("c1.all","c2.cgp","c2.cp.biocarta","c2.cp.kegg","c2.cp.reactome","c3.mir","c3.tft","c4.cgn","c4.cm","c5.bp","c5.cc","c5.mf","c6.all","c7.all", "horm");
 sexes=c("na_pos");
 pdf("heatmaps.pdf", width=8.5, height=11)
 #par(mar=c(6,1,1,5))

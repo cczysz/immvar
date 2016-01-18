@@ -8,8 +8,9 @@ fit.files <- list(
 
 fits <- list()
 
+weight.data <- list()
 for (cell in cell.types) {
-	cell <- 'CD4'
+	#cell <- 'CD4'
 	meta.all <- read.table(file=meta.files[[cell]], header=T)
 	meta.annots <- annots[meta.all$MarkerName,]
 
@@ -26,7 +27,7 @@ for (cell in cell.types) {
 
 	sig.weight.table <- table(meta.all.sig$Weight)
 
-	weight.data <- list()
+	weight.data[[cell]] <- list()
 	for (weight in names(sig.weight.table)) {
 		sig.genes <- subset(meta.all.sig, Weight==weight)
 		sig.annot <- annots[sig.genes$MarkerName, ]
@@ -43,6 +44,6 @@ for (cell in cell.types) {
 		}
 		dat <- rbind(dat, x)
 		}
-	weight.data[[weight]] <- dat
+	weight.data[[cell]][[weight]] <- dat
 	}
 }

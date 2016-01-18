@@ -14,14 +14,14 @@ EFFECT EFFECT
 PVALUE PVALUE 
 WEIGHT N
 
-PROCESS /home/t.cri.cczysz/meta_f.Gencord.txt
-PROCESS /home/t.cri.cczysz/meta_f.MesaT.txt
-PROCESS /home/t.cri.cczysz/meta_f.joint.CD4.txt
+PROCESS /home/t.cri.cczysz/meta_f.Caucasian.CD14.txt 
+PROCESS /home/t.cri.cczysz/meta_f.African-American.CD14.txt 
+PROCESS /home/t.cri.cczysz/meta_f.Asian.CD14.txt 
 
-OUTFILE cd4_meta_all .txt
+OUTFILE immvar_cd14_meta .txt
 
 # Minweight gives minimum total samples needed to output meta results
-MINWEIGHT 1
+MINWEIGHT 10
 ANALYZE 
 CLEAR
 
@@ -32,12 +32,12 @@ EFFECT EFFECT
 PVALUE PVALUE 
 WEIGHT N
 
-PROCESS /home/t.cri.cczysz/meta_f.MesaM.txt
-PROCESS /home/t.cri.cczysz/meta_f.Fairfax.txt
-PROCESS /home/t.cri.cczysz/meta_f.joint.CD14.txt
+PROCESS /home/t.cri.cczysz/meta_f.Caucasian.CD4.txt 
+PROCESS /home/t.cri.cczysz/meta_f.African-American.CD4.txt 
+PROCESS /home/t.cri.cczysz/meta_f.Asian.CD4.txt 
 
-OUTFILE cd14_meta_all .txt
+OUTFILE immvar_cd4_meta .txt
 
-MINWEIGHT 1
+MINWEIGHT 10
 ANALYZE 
 QUIT

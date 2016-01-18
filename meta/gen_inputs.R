@@ -13,11 +13,13 @@ load(file=f_in)
 
 if (cell == 'CD14') { 
 	ttable<-topTable(eb.fit, number=Inf)
+	cd14.genes <- rownames(ttable)
 	sig<-topTable(eb.fit, number=Inf, p.value=0.05)
 	n<-nrow(eb.fit$design)
 	n_genes<-nrow(ttable) } 
 else {
 	ttable<-topTable(eb.fit, number=Inf) 
+	cd4.genes <- rownames(ttable)
 	sig<-topTable(eb.fit, number=Inf, p.value=0.05)
 	n<-nrow(eb.fit$design)
 	n_genes<-nrow(ttable)
@@ -39,17 +41,20 @@ write.table(out_matrix, file=paste('/home/t.cri.cczysz/',f_out,sep=''), quote=F,
 }
 #}
 
-files.in <- c('emtab2232/fairfax_fit.Robj', 'GenCord/gencord_fit.Robj', 'GSE56580/mesa_tcells_fit.Robj', 'GSE56045/gencord_fit.Robj')
-studies <- c('Fairfax', 'Gencord', 'MesaT', 'MesaM')
-sample_size <- as.numeric(c(432, 85, 227, 1264))
+cd14.files.in <- c('emtab2232/fairfax_fit.Robj', 'GSE56045/gencord_fit.Robj')
+cd4.files.in <- c('GenCord/gencord_fit.Robj', 'GSE56580/mesa_tcells_fit.Robj')
+cd14.studies <- c('Fairfax', 'MesaM')
+cd4.studies <- c('Gencord', 'MesaT')
+cd14.sample_size <- as.numeric(c(432, 1264))
+cd4.sample_size <- as.numeric(c(85, 227))
 # fit,fit
 fit_dir <- "/group/stranger-lab/immvar_rep/"
 
-#pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/', paste('rep', 'volcano.pdf', sep='_'), sep=''))
-for (i in seq(length(files.in))) {
-	load(paste(fit_dir, files.in[i], sep=''))
+for (i in seq(length(cd14.files.in))) {
+	load(paste(fit_dir, cd14.files.in[i], sep=''))
 	
 	ttable <- topTable(fit, number=Inf)
+#	ttable <- ttable[rownames(ttable)%in%cd14.genes,]
 	n_genes <- nrow(ttable)
 	rm(out_matrix)
 	out_matrix <- data.frame(
@@ -59,13 +64,35 @@ for (i in seq(length(files.in))) {
 		STRAND=rep('+', times=n_genes), 
 		EFFECT=ttable$logFC,
 		PVALUE=ttable$P.Value, 
-		N=sample_size[i])
+		N=cd14.sample_size[i])
 	colnames(out_matrix) <- c('GENES', 'REF', 'ALT', 'STRAND', 'EFFECT', 'PVALUE', 'N')
 	print(head(out_matrix))
 
-	f_out <- paste('meta_f', studies[i], 'txt', sep='.')
+	f_out <- paste('meta_f', cd14.studies[i], 'txt', sep='.')
 	write.table(out_matrix, file=paste('/home/t.cri.cczysz/',f_out,sep=''), quote=F, row.names=F)
+}
+for (i in seq(length(cd4.files.in))) {
+	load(paste(fit_dir, cd4.files.in[i], sep=''))
+	
+	ttable <- topTable(fit, number=Inf)
+	#ttable <- ttable[rownames(ttable)%in%cd4.genes,]
+	n_genes <- nrow(ttable)
+	rm(out_matrix)
+	out_matrix <- data.frame(
+		GENES=rownames(ttable),
+		REF=rep('G', times=n_genes),
+		ALT=rep('A', times=n_genes), 
+		STRAND=rep('+', times=n_genes), 
+		EFFECT=ttable$logFC,
+		PVALUE=ttable$P.Value, 
+		N=cd4.sample_size[i])
+	colnames(out_matrix) <- c('GENES', 'REF', 'ALT', 'STRAND', 'EFFECT', 'PVALUE', 'N')
+	print(head(out_matrix))
 
+	f_out <- paste('meta_f', cd4.studies[i], 'txt', sep='.')
+	write.table(out_matrix, file=paste('/home/t.cri.cczysz/',f_out,sep=''), quote=F, row.names=F)
+}
+	if (F) {
 	rep.fit <- data.frame(fit)
 	rep.fit$chr <- as.character(annots[rownames(fit),'chr'])
 	rep.fit[!(rep.fit$chr=='chrY' | rep.fit$chr=='chrX'), 'chr'] <- 'auto'
@@ -104,8 +131,8 @@ for (i in seq(length(files.in))) {
 
 	)
 	#print(qplot(data=rep.fit, x=coefficients, y=-log10(p.value+1e-350), xlab='log2FC', ylab='-log10(pvalue)', main=studies[i]))
-	dev.off()
+	dev.off() }
 #+ geom_point(data=na.omit(fit[rownames(subset(annots, chr=='chrY')), ]), col='red') + 
 		#geom_point(data=na.omit(fit[rownames(subset(annots, chr=='chrX')), ]), col='blue')
-}
+
 #dev.off()

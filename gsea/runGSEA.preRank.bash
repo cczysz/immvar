@@ -1,6 +1,6 @@
 for f in /home/t.cri.cczysz/redo/*.rnk; do
 	#for set in $(ls /scratch/t.cczysz/gene_symbols/* | grep -v c2.all | grep -v c3.all | grep -v c4.all | grep -v c5.all); do
-	for set in $(ls /scratch/t.cczysz/gene_symbols/hr* | grep -v c[2-5].all); do
+	for set in $(ls /scratch/t.cczysz/gene_symbols/* | grep -v c[2-5].all); do
 	#geneset_short=$(echo $set | grep -oP "/[ch].*?\.v5\.0" | sed 's/\///g');
 	geneset_short=$(basename $set | grep -oP "[ch].*?\.v5\.0");
 
@@ -24,8 +24,8 @@ for f in /home/t.cri.cczysz/redo/*.rnk; do
 	-make_sets true \
 	-plot_top_x 20 \
 	-rnd_seed timestamp \
-	-set_max 500 \
-	-set_min 15 \
+	-set_max 800 \
+	-set_min 1 \
 	-zip_report false \
 	-gui false &> /scratch/t.cczysz/gsea_out/$fname.$sname.preRank.log;
 done

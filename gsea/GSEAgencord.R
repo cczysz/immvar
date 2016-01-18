@@ -72,9 +72,9 @@ for (obj in rep.fit.objects) {
 if (T) {
 setwd('/group/stranger-lab/immvar/meta/')
 ensembl = useMart("ENSEMBL_MART_ENSEMBL",dataset="hsapiens_gene_ensembl", host="www.ensembl.org")
-for (f in c('cd14_meta_rep1.txt', 'cd4_meta_rep1.txt', 'cd4_meta_all1.txt', 'cd14_meta_all1.txt', 'cd14_meta_weight1.txt', 'cd4_meta_weight1.txt')) {
+for (f in c('cd14_meta_all1.txt', 'cd4_meta_all1.txt', 'cd4_meta_immvar1.txt', 'cd14_meta_immvar1.txt')) {
 	meta_res <- read.table(file=f, header=T, row.names=1)
-	meta_res <- subset(meta_res, Weight==max(as.numeric(names(table(meta_res$Weight)))))
+	#meta_res <- subset(meta_res, Weight==max(as.numeric(names(table(meta_res$Weight)))))
 	pvals <- data.frame(meta_res$P.value, row.names=rownames(meta_res))
 		
 	biomart.results=getBM(ensembl,attributes=c("ensembl_gene_id","hgnc_symbol","entrezgene"),filters="ensembl_gene_id",values=substring(rownames(meta_res),1,15))
