@@ -8,7 +8,7 @@ use List::MoreUtils 'pairwise';
 
 my @filetypes=("matrix.txt","filter.nompval.0.05.matrix.txt","filter.fdr.0.25.matrix.txt");
 #my @filetypes=("matrix.txt");
-my @gene_set_types=("c1.all","c2.cgp","c2.cp.biocarta","c2.cp.kegg","c2.cp.reactome","c3.mir","c3.tft","c4.cgn","c4.cm","c5.bp","c5.cc","c5.mf","c6.all","c7.all", "hg.all");
+my @gene_set_types=("c1.all","c2.cgp","c2.cp.biocarta","c2.cp.kegg","c2.cp.reactome","c3.mir","c3.tft","c4.cgn","c4.cm","c5.bp","c5.cc","c5.mf","c6.all","c7.all", "hr.all");
 my @sexes=("na_pos");
 my %matrix;
 
@@ -33,7 +33,7 @@ foreach my $gene_set_type (@gene_set_types) {
 	
 		my $fileout=join('.',$gene_set_type,'top20_gene_sets',$sex,'total.matrix.txt');
 		open ($out,'>',$fileout);
-		print $out "Gene_set CD14.Meta CD14.Meta.Weight ImmVar.CD14 ImmVar.CD4 CD4.Meta.Weight CD4.Meta\n";
+		print $out "Gene_set CD14.Meta.All CD14.Meta.ImmVar ImmVar.CD14 ImmVar.CD4 CD4.Meta.ImmVar CD4.Meta.All\n";
 		for my $key ( sort { sum(@{$matrix{$sex}{$gene_set_type}{$b}}) <=> sum(@{$matrix{$sex}{$gene_set_type}{$a}})  } keys %{$matrix{$sex}{$gene_set_type}} )
         	{
 			my $string = join(" ", $key,@{$matrix{$sex}{$gene_set_type}{$key}});

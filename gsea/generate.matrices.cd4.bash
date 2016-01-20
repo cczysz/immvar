@@ -2,12 +2,11 @@
 
 # for i in $(echo "rep.emtab2232 rep.GSE56045 meta.cd14 meta.cd14.all1.txt immvar.CD14 immvar.CD4 meta.cd4_all1.txt meta.cd4 rep.GenCord rep.GSE56580"); do
 #for e in $(echo "c1.all c2.cgp c2.cp.biocarta c2.cp.kegg c2.cp.reactome c3.mir c3.tft c4.cgn c4.cm c5.bp c5.cc c5.mf c6.all c7.all"); do
-FDIR=/scratch/t.cczysz/gsea_out/
+FDIR=/scratch/t.cczysz/gsea_out/CD4
 WDIR=/scratch/t.cczysz/gsea_test/
 
 sets="c1.all c2.cgp c2.cp.biocarta c2.cp.kegg c2.cp.reactome c3.mir c3.tft c4.cgn c4.cm c5.bp c5.cc c5.mf c6.all c7.all hr.all"
-#study="rep.emtab2232 rep.GSE56045 meta.cd14 meta.cd14.all1.txt immvar.CD14 immvar.CD4 meta.cd4_all1.txt meta.cd4 rep.GenCord rep.GSE56580"
-study="meta.all.cd14_all1.txt meta.all.cd14_immvar1.txt immvar.CD14 immvar.CD4 meta.all.cd4_immvar1.txt meta.all.cd4_all1.txt"
+study="immvar.CD4 meta.all.cd4_immvar1.txt meta.all.cd4_all1.txt"
 
 cd $FDIR;
 for e in $(echo $sets); do
@@ -36,7 +35,7 @@ for i in $(echo $study); do
 	done;
 done;
 
-mkdir significant; mv *txt significant;
+mkdir significant; mv *.txt significant;
 
 echo $PWD 
 
@@ -52,7 +51,7 @@ for e in $(echo $sets); do
 	echo $e;
 	for u in $(cat top20/$e.top20_gene_sets.na_pos.txt); do
 		#echo $(grep -cw $u significant/*$e*.na_pos.filter.nompval.0.05.txt | grep -oP ":[01]" | sed 's/://g' | sed 's/\s/\t/g' ) >> $e.top20_gene_sets.na_pos.filter.nompval.0.05.txt;
-		echo $(grep -cw $u significant/*$e*.na_pos.filter.nompval.0.05.txt | grep -oP ":[01]" | sed 's/://g' | sed 's/\s/\t/g' ) >> $e.top20_gene_sets.na_pos.filter.nompval.0.05.txt;
+		echo $(grep -cw "$u" significant/*$e*.na_pos.filter.nompval.0.05.txt | grep -oP ":[01]" | sed 's/://g' | sed 's/\s/\t/g' ) >> $e.top20_gene_sets.na_pos.filter.nompval.0.05.txt;
 		unset u;
 	done;
 	paste top20/*$e.top20_gene_sets.na_pos.txt $e.top20_gene_sets.na_pos.filter.nompval.0.05.txt > $e.top20_gene_sets.na_pos.filter.nompval.0.05.matrix.txt;
