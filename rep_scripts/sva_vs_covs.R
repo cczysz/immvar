@@ -113,7 +113,11 @@ for (cov in seq(length(covs))) {
 }
 }
 
-pop <- phen.cd4$Race
+pop <- as.character(phen.cd4$Race)
+pop <- replace(pop, pop=='Caucasian', 0)
+pop <- replace(pop, pop=='African-American', 1)
+pop <- replace(pop, pop=='Asian', 2)
+pop <- as.numeric(pop)
 race.covs <- c()
 race.pval <- c()
 for (sv in seq(ncol(cd4.svs))) {
@@ -214,7 +218,11 @@ for (cov in seq(length(covs))) {
 }
 }
 
-pop <- phen.cd14$Race
+pop <- as.character(phen.cd14$Race)
+pop <- replace(pop, pop=='Caucasian', 0)
+pop <- replace(pop, pop=='African-American', 1)
+pop <- replace(pop, pop=='Asian', 2)
+pop <- as.numeric(pop)
 race.covs <- c()
 race.pval <- c()
 for (sv in seq(ncol(cd14.svs))) {
@@ -276,6 +284,28 @@ for (pc in seq(ncol(cd14.pcs))) {
 }
 pc.cov.mat <- cbind(pc.cov.mat, frozen=frozen.covs)
 pc.pval.mat <- cbind(pc.pval.mat, frozen=frozen.covs)
+
+sex <- as.character(phen.cd14$Sex)
+sex <- as.numeric(sex=='Male')
+sex.covs <- c()
+sex.pval <- c()
+for (sv in seq(ncol(cd14.svs))) {
+	x <- lm(cd14.svs[,sv] ~ sex)
+	sex.covs <- c(sex.covs, summary.lm(x)$r.squared)
+	sex.pval <- c(sex.pval, summary.lm(x)$coefficients[2,4])
+}
+cov.mat <- cbind(cov.mat, sex=sex.covs)
+cov.pval.mat <- cbind(cov.pval.mat, sex=sex.pval)
+
+sex.covs <- c()
+sex.pval <- c()
+for (pc in seq(ncol(cd14.pcs))) {
+	x <- lm(cd14.pcs[,pc] ~ sex)
+	sex.covs <- c(sex.covs, summary.lm(x)$r.squared)
+	sex.pval <- c(sex.pval, summary.lm(x)$coefficients[2,4])
+}
+pc.cov.mat <- cbind(pc.cov.mat, sex=sex.covs)
+pc.pval.mat <- cbind(pc.pval.mat, sex=sex.covs)
 #pdf(file='/scratch/t.cczysz/cd14_heatmap.pdf')
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14_pcavscovs.pdf', width=9, height=9)
 #heatmap.2(pc.cov.mat[,-4],trace='none')
