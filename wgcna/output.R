@@ -56,14 +56,19 @@ for (j in seq(length(colnames(cd14.intersect.matrix)))) {
 }
 
 cd14.femnames = paste(names(table(gene.colors$CD14.female)), table(gene.colors$CD14.female), sep=" N=")
+cd14.fem.order <- order(table(gene.colors$CD14.female), decreasing=T)
 cd14.malnames = paste(names(table(gene.colors$CD14.male)), table(gene.colors$CD14.male), sep=" N=")
+cd14.mal.order <- order(table(gene.colors$CD14.male), decreasing=T)
 cd4.femnames = paste(names(table(gene.colors$CD4.female)), table(gene.colors$CD4.female), sep=" N=")
+cd4.fem.order <- order(table(gene.colors$CD4.female), decreasing=T)
 cd4.malnames = paste(names(table(gene.colors$CD4.male)), table(gene.colors$CD4.male), sep=" N=")
+cd4.mal.order <- order(table(gene.colors$CD4.male), decreasing=T)
 
 cd14.sharing.matrix <- cd14.intersect.matrix/cd14.union.matrix
+cd14.sharing.matrix <- cd14.sharing.matrix[cd14.mal.order, cd14.fem.order]
 pdf('/group/stranger-lab/czysz/ImmVar/plots/wgnca_sharing.pdf', width=8, height=8)
-heatmap.2(cd14.sharing.matrix, margins=c(7,7), key=T, density.info='none', key.title='', key.xlab='Overlap', Rowv=F, Colv=F, cexRow=0.8, cexCol=0.8, notecol='black', cellnote=trunc(100*cd14.sharing.matrix), trace='none', notecex=0.5,
-	ylab='Male', xlab='Female', main='CD14', col=heat.colors(100, alpha=0.5)[seq(100,1)], labRow=cd14.malnames, labCol=cd14.femnames)
+heatmap.2(cd14.sharing.matrix, margins=c(7,7), key=T, density.info='none', key.title='', key.xlab='Overlap', Rowv=F, Colv=F, cexRow=0.8, cexCol=0.8, notecol='black', cellnote=trunc(100*cd14.sharing.matrix), trace='none', notecex=1,
+	ylab='Male', xlab='Female', main='CD14', col=heat.colors(100, alpha=0.5)[seq(100,1)], labRow=cd14.malnames[cd14.mal.order], labCol=cd14.femnames[cd14.mal.order])
 
 cd4.intersect.matrix <- matrix(0, nrow=length(unique(gene.colors[,4])),ncol=length(unique(gene.colors[,3])))
 cd4.union.matrix <- matrix(0, nrow=length(unique(gene.colors[,4])),ncol=length(unique(gene.colors[,3])))
@@ -88,7 +93,8 @@ for (j in seq(length(colnames(cd4.intersect.matrix)))) {
 }
 
 cd4.sharing.matrix <- cd4.intersect.matrix/cd4.union.matrix
-heatmap.2(cd4.sharing.matrix, margins=c(7,7), key=T, density.info='none', key.title='', key.xlab='Overlap', Rowv=F, Colv=F, cexRow=0.8, cexCol=0.8, notecol='black', cellnote=trunc(100*cd4.sharing.matrix), trace='none', notecex=0.5,
-	ylab='Male', xlab='Female', main='CD4', col=heat.colors(100, alpha=0.5)[seq(100,1)], labRow=cd4.malnames, labCol=cd4.femnames)
+cd4.sharing.matrix <- cd4.sharing.matrix[cd4.mal.order, cd4.fem.order]
+heatmap.2(cd4.sharing.matrix, margins=c(7,7), key=T, density.info='none', key.title='', key.xlab='Overlap', Rowv=F, Colv=F, cexRow=0.8, cexCol=0.8, notecol='black', cellnote=trunc(100*cd4.sharing.matrix), trace='none', notecex=1,
+	ylab='Male', xlab='Female', main='CD4', col=heat.colors(100, alpha=0.5)[seq(100,1)], labRow=cd4.malnames[cd4.mal.order], labCol=cd4.femnames[cd4.fem.order])
 
 dev.off()
