@@ -9,6 +9,6 @@
 #PBS -o $HOME/
 #PBS -e $HOME/de.err
 
-module load java
+#module load java
 
 bash /group/stranger-lab/immvar/gsea/runGSEA.preRank.bash
