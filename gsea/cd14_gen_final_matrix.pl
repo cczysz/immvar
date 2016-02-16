@@ -18,7 +18,7 @@ foreach my $gene_set_type (@gene_set_types) {
 #c7.all.top20_gene_sets.males.filter.nompval.0.05.matrix.txt
 			my $file=join('.',$gene_set_type,'top20_gene_sets',$sex,$filetype);
 			open(my $fh,"<",$file);
-			$header=<$fh>;
+			#	$header=<$fh>;
 			while(<$fh>) {
 				@values=split(" ",$_);
 				my $gene_set=shift(@values);
@@ -33,7 +33,7 @@ foreach my $gene_set_type (@gene_set_types) {
 	
 		my $fileout=join('.',$gene_set_type,'top20_gene_sets',$sex,'total.matrix.txt');
 		open ($out,'>',$fileout);
-		print $out "Gene_set CD14.Meta CD14.Meta.ImmVar ImmVar.CD14\n";
+		print $out "Gene_set ImmVar.CD14 CD14.Meta.ImmVar CD14.Meta.All\n";
 		for my $key ( sort { sum(@{$matrix{$sex}{$gene_set_type}{$b}}) <=> sum(@{$matrix{$sex}{$gene_set_type}{$a}})  } keys %{$matrix{$sex}{$gene_set_type}} )
         	{
 			my $string = join(" ", $key,@{$matrix{$sex}{$gene_set_type}{$key}});

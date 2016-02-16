@@ -18,7 +18,7 @@ foreach my $gene_set_type (@gene_set_types) {
 #c7.all.top20_gene_sets.males.filter.nompval.0.05.matrix.txt
 			my $file=join('.',$gene_set_type,'top20_gene_sets',$sex,$filetype);
 			open(my $fh,"<",$file);
-			$header=<$fh>;
+			#$header=<$fh>;
 			while(<$fh>) {
 				@values=split(" ",$_);
 				my $gene_set=shift(@values);
