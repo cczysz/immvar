@@ -6,6 +6,7 @@ if (!(require(gwascat))) {
 library(gwascat)
 library(ggplot2)
 library(reshape2)
+library(plyr)
 load('/group/stranger-lab/immvar_rep/mappings/annot.Robj')
 
 if (file.exists(file='/group/stranger-lab/czysz/disease_genes.Robj')) {
@@ -289,3 +290,18 @@ print(head(cd14.meta.gwas[order(cd14.meta.gwas$P.value),c(-1,-2,-3,-7,-8)],50))
 shared.disease.genes <- intersect(subset(disease.genes.cd4, qval<0.05)$value, subset(disease.genes.cd14, qval<0.05)$value)
 y <- subset(disease.genes.cd14, value%in%shared.disease.genes)
 x <- subset(disease.genes.cd4, value%in%shared.disease.genes)
+
+genes.to.write <- list()
+for (i in seq(length(names(disease.genes)))) {
+	x <- data.frame()
+	for (j in disease.genes[[i]]) { 
+		x <- rbind.fill(x, data.frame(t(data.frame(j)))) 
+	}
+	x <- t(x)
+	colnames(x) <- names(disease.genes[[i]])
+	genes.to.write[[names(disease.genes)[i]]] <- x
+	f.out <- paste(names(disease.genes)[i], 'disease.genes.csv', sep='_')
+	write.table(file=paste('/group/stranger-lab/czysz/', f.out, sep=''), x, quote=F, sep=',', row.names=F)
+}
+
+
