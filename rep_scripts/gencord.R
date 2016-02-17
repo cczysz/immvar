@@ -17,7 +17,8 @@ importRawData <- function() {
 	columnNameGrepPattern=list(detection=NA, beadNum=NA))
 	fdat <<- fData(dat)	
 	dat.exp <- exprs(dat)
-	
+
+	if (F) {	
 	pdf(file='raw_density.pdf', width=8.5, height=11)
 	plot(dat, what='density')
 	dev.off()
@@ -26,6 +27,7 @@ importRawData <- function() {
 	plot(dat, what='MAplot', smoothScatter=T)
 	plot(example.lumi, what='sampleRelation', method='mds', cex=0.5)
 	dev.off()
+}
 
 
 	ids<-c()
@@ -53,7 +55,7 @@ importRawData <- function() {
 	return(dat.N.T)
 }
 
-predictSex <- function(temp.dat, plot_massi=F) {
+predictSex <- function(temp.dat, plot_massi=T) {
 	## Verify massiR results
 	y_probes <- data.frame(row.names=c("Ng17goGe3f5AsKKHCo", "oE68.e0uHwT2v8UlJI", "KuyUIoSDxODhLlSLhI", "E35Tklf.OiQtEMSSfk",
 		"KLpuVfpdEpAgwfAJ4Y", "TN6X5VSSxLX1wwao50", "NnMe15_xBOv6rgqigI","T7rNJ6HSwRV.fSeqOo",
