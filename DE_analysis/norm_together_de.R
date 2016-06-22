@@ -32,15 +32,16 @@ MakeResiduals <- function(input.row,peer.factors) {
 	residuals(fit)
 }
 
-PerformDEAnalysis <- function(expr, samples) {
-	#mod = model.matrix(~0 + as.factor(samples) + cau + afr)
+PerformDEAnalysis <- function(expr, samples, cell) {
 	mod = model.matrix(~0 + as.factor(samples))
+        #mod = model.matrix(~0 + rep(0, ncol(expr)))
         colnames(mod) <- c('Female', 'Male')
         mod0 = model.matrix(~0 + rep(1, ncol(expr)))
         #mod0 = model.matrix(~0 + as.factor(pop))
 
         svobj <- sva(expr, mod, mod0)
         modSv <- cbind(mod, svobj$sv)
+	save(modSv, file=paste('/group/stranger-lab/immvar_data/sv.',cell,'.Robj', sep=''))
 
         fit <- lmFit(expr, modSv)
         contrast.matrix <- c(-1, 1, rep(0, svobj$n.sv))
@@ -190,8 +191,7 @@ for (cell.type in c("CD4","CD14")) {
 	legend('topright', c('Male', 'Female'), col=c('blue', 'red'), pch='-')
 	dev.off()
 
-	if (F) {	
-	eb.fit <- PerformDEAnalysis(exp_genes, as.numeric(sex=="Male"))
+	eb.fit <- PerformDEAnalysis(exp_genes, as.numeric(sex=="Male"), cell.type)
 	#eb.fit <- PerformDEAnalysis(exp_genes, as.numeric(sex=="Male"))
 	eb.fit$N <- as.numeric(rep(ncol(exp_genes), nrow(eb.fit)))
 	eb.fit$chr <- as.character(annots[rownames(eb.fit), "chr"])
@@ -216,7 +216,6 @@ for (cell.type in c("CD4","CD14")) {
 	
 	#AnalyzeFit(eb.fit, exp_genes, sex)
 	#FTest(eb.fit,exp_genes,expr.residuals, sex)
-}
 
 	}
 #}

@@ -2,6 +2,7 @@ library(limma)
 library(stringr)
 library(gplots)
 library(gtools)
+library(ggplot2)
 
 setwd('/group/stranger-lab/moliva/ImmVar/Robjects')
 meta=read.table('../data/pheno/metadata.csv',header=T,sep=',',comment.char = '~')
@@ -29,11 +30,11 @@ cd4.exp <- exp_genes.cd4.joint.norm[, mixedorder(cd4.names)]
 cd14.exp <- exp_genes.cd14.joint.norm[, mixedorder(cd14.names)]
 
 # Calculate PCs of expression data
-cd4.pcs<-prcomp(t(exp_genes.cd4.joint.norm))
-cd4.pcs <- cd4.pcs$x[,1:20]
+cd4.pc<-prcomp(t(exp_genes.cd4.joint.norm))
+cd4.pcs <- cd4.pc$x[,1:20]
 
-cd14.pcs<-prcomp(t(exp_genes.cd14.joint.norm))
-cd14.pcs <- cd14.pcs$x[,1:20]
+cd14.pc<-prcomp(t(exp_genes.cd14.joint.norm))
+cd14.pcs <- cd14.pc$x[,1:20]
 
 # Save surrogate variables
 load('/group/stranger-lab/immvar_data/sv.CD4.Robj')
@@ -179,13 +180,48 @@ for (pc in seq(ncol(cd4.pcs))) {
 }
 pc.cov.mat <- cbind(pc.cov.mat, frozen=frozen.covs)
 pc.pval.mat <- cbind(pc.pval.mat, frozen=frozen.covs)
-#pdf(file='/scratch/t.cczysz/cd4_heatmap.pdf')
+
+sex <- as.character(phen.cd4$Sex)
+sex <- as.numeric(sex=='Male')
+sex.covs <- c()
+sex.pval <- c()
+for (sv in seq(ncol(cd4.svs))) {
+	x <- lm(cd4.svs[,sv] ~ sex)
+	sex.covs <- c(sex.covs, summary.lm(x)$r.squared)
+	sex.pval <- c(sex.pval, summary.lm(x)$coefficients[2,4])
+}
+cov.mat <- cbind(cov.mat, sex=sex.covs)
+colnames(cov.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
+cov.pval.mat <- cbind(cov.pval.mat, sex=sex.pval)
+colnames(cov.pval.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
+
+sex.covs <- c()
+sex.pval <- c()
+for (pc in seq(ncol(cd4.pcs))) {
+	x <- lm(cd4.pcs[,pc] ~ sex)
+	sex.covs <- c(sex.covs, summary.lm(x)$r.squared)
+	sex.pval <- c(sex.pval, summary.lm(x)$coefficients[2,4])
+}
+pc.cov.mat <- cbind(pc.cov.mat, sex=sex.covs)
+colnames(pc.cov.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
+pc.pval.mat <- cbind(pc.pval.mat, sex=sex.covs)
+colnames(pc.pval.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4_pcavscovs.pdf', width=9, height=9)
-#heatmap.2(pc.cov.mat[,-4],trace='none')
 heatmap.2(cov.mat[,-4],cellnote=signif(cov.pval.mat[,-4],2), notecex=1, notecol='black',col=heat.colors(20)[seq(20,1)],trace='none', Rowv=NULL, key.xlab='R^2', margins=c(7,7))#, main='CD4+ SV vs Covariates')
 heatmap.2(pc.cov.mat[,-4],cellnote=signif(pc.pval.mat[,-4],2), notecex=1, notecol='black',col=heat.colors(20)[seq(20,1)],trace='none', Rowv=NULL, key.xlab='R^2', margins=c(7,7))#, main='CD4+ PCs vs Covariates')
 dev.off()
 
+pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4_pcs.pdf', width=9, height=9)
+biplot(cd4.pc)
+for (i in seq(2)) {
+for (j in seq(i+1,3)) {
+df = data.frame(a=cd4.pcs[,i],b=cd4.pcs[,j])
+print(qplot(data=cbind(df,batch=batch), x=a, y=b, color=as.factor(batch)))
+print(qplot(data=cbind(df,sex=as.factor(as.character(phen.cd4$Sex))), x=a, y=b, color=sex))
+print(qplot(data=cbind(df, pop=pop), x=a, y=b, color=as.factor(pop)))
+} }
+dev.off()
+q()
 rm(cov.mat)
 rm(cov.pval.mat)
 rm(pc.cov.mat)
@@ -295,7 +331,9 @@ for (sv in seq(ncol(cd14.svs))) {
 	sex.pval <- c(sex.pval, summary.lm(x)$coefficients[2,4])
 }
 cov.mat <- cbind(cov.mat, sex=sex.covs)
+colnames(cov.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
 cov.pval.mat <- cbind(cov.pval.mat, sex=sex.pval)
+colnames(cov.pval.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
 
 sex.covs <- c()
 sex.pval <- c()
@@ -305,7 +343,9 @@ for (pc in seq(ncol(cd14.pcs))) {
 	sex.pval <- c(sex.pval, summary.lm(x)$coefficients[2,4])
 }
 pc.cov.mat <- cbind(pc.cov.mat, sex=sex.covs)
+colnames(pc.cov.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
 pc.pval.mat <- cbind(pc.pval.mat, sex=sex.covs)
+colnames(pc.pval.mat) <- c('Age', 'Height', 'Weight', 'Blood Pressure', 'BMI', 'Systolic BP', 'Diastolic BP', 'Population', 'Batch', 'Frozen', 'Sex')
 #pdf(file='/scratch/t.cczysz/cd14_heatmap.pdf')
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14_pcavscovs.pdf', width=9, height=9)
 #heatmap.2(pc.cov.mat[,-4],trace='none')

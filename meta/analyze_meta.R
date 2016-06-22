@@ -3,6 +3,7 @@ library(stats)
 library(VennDiagram)
 library(gtools)
 library(ggplot2)
+#library(ggrepel)
 library(reshape2)
 
 setwd('/group/stranger-lab/immvar/meta')
@@ -57,13 +58,19 @@ xesc.genes <- as.character(xesc.genes[,1])
 ########################################
 # Process jointly normalized ImmVar data
 load('/group/stranger-lab/immvar_data/fit.joint.CD14.Robj')
-joint.cd14.fit <- data.frame(eb.fit)
-joint.cd14.fit$q.value <- p.adjust(joint.cd14.fit$p.value, method="fdr")
-joint.cd14.fit$rank <- rank(joint.cd14.fit$p.value) / nrow(joint.cd14.fit)
-joint.cd14.fit$chr <- as.character(annots[rownames(joint.cd14.fit),'chr'])
+#joint.cd14.fit <- data.frame(eb.fit)
+#joint.cd14.fit$q.value <- p.adjust(joint.cd14.fit$p.value, method="fdr")
+#joint.cd14.fit$rank <- rank(joint.cd14.fit$p.value) / nrow(joint.cd14.fit)
+#joint.cd14.fit$chr <- as.character(annots[rownames(joint.cd14.fit),'chr'])
+#save(joint.cd14.fit, file='/group/stranger-lab/immvar_data/fit.joint.CD14.Robj')
 joint.cd14.sig <- subset(joint.cd14.fit, q.value<=0.05)
 
 sig.5 <- max(joint.cd14.sig$p.value)
+
+pdf(file='/home/t.cri.cczysz/immvarcd14pval.pdf', width=12, height=8)
+g <- ggplot(data=joint.cd14.fit, aes(x=p.value)) 
+g + geom_bar()
+dev.off()
 
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/immvar.cd14.fc.pdf', width=11, height=8)
 #plot(density(joint.cd14.fit$coefficients), main='CD14 density of log2 fold change for all genes', xlab='log2FC', ylab='')
@@ -94,8 +101,13 @@ cd14.bar.allcount <- as.numeric(table(joint.cd14.fit$chr))[mixedorder(names(tabl
 cd14.bar.df$male <- cd14.bar.df$male / cd14.bar.allcount
 cd14.bar.df$female <- cd14.bar.df$female / cd14.bar.allcount
 g <- ggplot(data=melt(cd14.bar.df), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
-	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
+g + geom_bar(stat='identity') + labs(title='', x='', y='percent') + guides(fill=guide_legend(title='')) + 
+	scale_fill_manual(name="", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red')) +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.text.x = element_text(size = rel(1.6), angle = 90))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	+
+	theme(legend.text = element_text(size= rel(1.6))) +
+	theme(legend.title = element_text(size= rel(1.5)))
 dev.off()
 
 pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','qq_CD14.pdf',sep=''), width=11, height=8)
@@ -105,18 +117,28 @@ qqplot.data <- data.frame(obs=-log10(sort(joint.cd14.fit$p.value)),
 	row.names=row.names(joint.cd14.fit[order(joint.cd14.fit$p.value),]))
 qqplot.data$chr <- as.character(qqplot.data$chr)
 qqplot.data[!(qqplot.data$chr=='chrY' | qqplot.data$chr=='chrX'), 'chr'] <- 'auto'
+cd14.qqplot <- qqplot.data
 g <- ggplot(data=qqplot.data, aes(x=exp, y=obs, color=chr))
 g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
 	geom_abline()
+
+g <- ggplot(data=qqplot.data, aes(x=exp, y=obs))
+g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
+	geom_abline() +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 dev.off()
 
-pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD14.pdf',sep=''), width=12, height=8)
+pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD14.pdf',sep=''), width=12, height=10)
 volplot.data <- data.frame(logFC=joint.cd14.fit$coefficients,
 	pval=-log10(joint.cd14.fit$p.value),
 	chr=as.character(joint.cd14.fit$chr),
 	row.names=rownames(joint.cd14.fit),
+	gene=joint.cd14.fit$symbol,
 	xesc=joint.cd14.fit$symbol%in%xesc.genes)
 volplot.data$chr <- as.character(volplot.data$chr)
 volplot.data[!(volplot.data$chr=='chrY' | volplot.data$chr=='chrX'),'chr'] <- 'auto'
@@ -124,30 +146,59 @@ g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
 p1 <- g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
-	geom_abline(slope=0, intercept=-log10(sig.5)) + annotate('rect',xmin=-1, xmax=1, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") 
+	geom_abline(slope=0, intercept=-log10(sig.5)) + annotate('rect',xmin=-1, xmax=1, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6), angle = 90))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
 p2 <- g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
-		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
+		name='', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
 	scale_x_continuous(limits = c(-1, 1)) + scale_y_continuous(limits = c(0, 30)) +
-	geom_abline(slope=0, intercept=-log10(sig.5))
+	geom_abline(slope=0, intercept=-log10(sig.5)) +
+	theme(axis.title.y = element_text(size = rel(1.2), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.2)))	+
+	theme(axis.text.x = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.text.y = element_text(size = rel(1.4)))	+
+	theme(legend.text = element_text(size= rel(1.3))) 
 multiplot(p1, p2, cols=2)
 g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=xesc))
 g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
 	geom_abline(slope=0, intercept=-log10(sig.5)) + geom_point(data=subset(volplot.data, xesc==T),aes(color=xesc), col='green')
 dev.off()
 
+pdf('cd14_lab_volcano.pdf', width=12, height=12)
+g <- ggplot(data=volplot.data, aes(x=logFC, y=pval, color=chr))
+g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
+	geom_abline(slope=0, intercept=-log10(sig.5)) + 
+	scale_color_manual(values=c('black','red','blue'),
+		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
+	geom_abline(slope=0, intercept=-log10(sig.5[1])) + theme(legend.position="none") + labs(title='CD14+', x='log2FC', y='-log10(p-value)') +
+	theme(axis.title.y = element_text(size = rel(1.8), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.8)))	+
+	theme(axis.text.y = element_text(size = rel(1.6), angle = 90))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	
+	#geom_text_repel(data=volplot.data[order(volplot.data$pval, decreasing=T),][1:50,], aes(label=gene))
+	#geom_text(data=volplot.data[order(volplot.data$pval, decreasing=T),][1:50,], aes(label=gene))
+dev.off()
+
 library(gtools)
 
 load('/group/stranger-lab/immvar_data/fit.joint.CD4.Robj')
-joint.cd4.fit <- data.frame(eb.fit)
-joint.cd4.fit$q.value <- p.adjust(joint.cd4.fit$p.value, method="fdr")
-joint.cd4.fit$rank <- rank(joint.cd4.fit$p.value) / nrow(joint.cd4.fit)
-joint.cd4.fit$chr <- as.character(annots[rownames(joint.cd4.fit),'chr'])
+#joint.cd4.fit <- data.frame(eb.fit)
+#joint.cd4.fit$q.value <- p.adjust(joint.cd4.fit$p.value, method="fdr")
+#joint.cd4.fit$rank <- rank(joint.cd4.fit$p.value) / nrow(joint.cd4.fit)
+#joint.cd4.fit$chr <- as.character(annots[rownames(joint.cd4.fit),'chr'])
+save(joint.cd4.fit, file='/group/stranger-lab/immvar_data/fit.joint.CD4.Robj')
 joint.cd4.sig <- subset(joint.cd4.fit, q.value<=0.05)
 
 sig.5 <- max(joint.cd14.sig$p.value)
 
+pdf(file='/home/t.cri.cczysz/immvarcd4pval.pdf', width=12, height=8)
+g <- ggplot(data=joint.cd4.fit, aes(x=p.value)) 
+g + geom_bar()
+dev.off()
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/immvar.cd4.fc.pdf', width=11, height=8)
 #plot(density(joint.cd14.fit$coefficients), main='CD14 density of log2 fold change for all genes', xlab='log2FC', ylab='')
 #plot(density(joint.cd14.sig$coefficients), main='CD14 density of log2 fold change for significant genes', xlab='log2FC', ylab='')
@@ -181,8 +232,13 @@ cd4.bar.allcount <- as.numeric(table(joint.cd4.fit$chr))[mixedorder(names(table(
 cd4.bar.df.per$male <- cd4.bar.df.per$male / cd4.bar.allcount
 cd4.bar.df.per$female <- cd4.bar.df.per$female / cd4.bar.allcount
 g <- ggplot(data=melt(cd4.bar.df.per), aes(x=chr, y=value, fill=variable))
-g + geom_bar(stat='identity') + labs(title='', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
-	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
+g + geom_bar(stat='identity') + labs(title='', x='', y='percent') + guides(fill=guide_legend(title='')) + 
+	scale_fill_manual(name="", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red')) + 
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.text.x = element_text(size = rel(1.6), angle = 90))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	+
+	theme(legend.text = element_text(size= rel(1.6))) +
+	theme(legend.title = element_text(size= rel(1.5)))
 dev.off()
 pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','qq_CD4.pdf',sep=''), width=12, height=8)
 qqplot.data <- data.frame(obs=-log10(sort(joint.cd4.fit$p.value)),
@@ -191,18 +247,27 @@ qqplot.data <- data.frame(obs=-log10(sort(joint.cd4.fit$p.value)),
 	row.names=row.names(joint.cd14.fit[order(joint.cd14.fit$p.value),]))
 qqplot.data$chr <- as.character(qqplot.data$chr)
 qqplot.data[!(qqplot.data$chr=='chrY' | qqplot.data$chr=='chrX'),'chr'] <- 'auto'
-
+cd4.qqplot <- qqplot.data
 g <- ggplot(data=qqplot.data, aes(x=exp, y=obs, color=chr))
 g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black','red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
-	geom_abline()
+	geom_abline() 
+
+g <- ggplot(data=qqplot.data, aes(x=exp, y=obs))
+g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
+	geom_abline() +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 dev.off()
 
 pdf(file=paste('/group/stranger-lab/czysz/ImmVar/plots/','volcano_CD4.pdf',sep=''), width=12, height=10)
 qqplot.data <- data.frame(logFC=joint.cd4.fit$coefficients,
 	pval=-log10(joint.cd4.fit$p.value),
 	chr=joint.cd4.fit$chr,
+	gene=joint.cd4.fit$symbol,
 	row.names=rownames(joint.cd4.fit),
 	xesc=joint.cd4.fit$symbol%in%xesc.genes)
 qqplot.data$chr <- as.character(qqplot.data$chr)
@@ -211,19 +276,38 @@ g <- ggplot(data=qqplot.data, aes(x=logFC, y=pval, color=chr))
 p1 <- g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
 	scale_color_manual(values=c('black','red','blue'),
 		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
-	geom_abline(slope=0, intercept=-log10(sig.5[1])) + annotate('rect', xmin=-1, xmax=1, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") 
+	geom_abline(slope=0, intercept=-log10(sig.5[1])) + annotate('rect', xmin=-1, xmax=1, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6), angle = 90))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 
-p2 <- g + geom_point() + labs(title='', xlab='log2FC', ylab='-log10(pvalue)') + 
+p2 <- g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
 	scale_color_manual(values=c('black','red','blue'),
-		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
+		name='', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
 	scale_x_continuous(limits = c(-1, 1)) + scale_y_continuous(limits = c(0, 30)) +
-	geom_abline(slope=0, intercept=-log10(sig.5[1])) 
+	geom_abline(slope=0, intercept=-log10(sig.5[1])) +
+	theme(axis.title.y = element_text(size = rel(1.2), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.2)))	+
+	theme(axis.text.x = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.text.y = element_text(size = rel(1.4)))	+
+	theme(legend.text = element_text(size= rel(1.3))) 
 multiplot(p1, p2, cols=2)
-g <- ggplot(data=qqplot.data, aes(x=logFC, y=pval, color=xesc))
-g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
-	geom_abline(slope=0, intercept=-log10(sig.5)) + geom_point(data=subset(qqplot.data, xesc==T),aes(color=xesc), col='green')
 dev.off()
 
+pdf('cd4_lab_volcano.pdf', width=12, height=12)
+g <- ggplot(data=qqplot.data, aes(x=logFC, y=pval, color=chr))
+g + geom_point() + labs(title='', x='log2FC', y='-log10(pvalue)') + 
+	geom_abline(slope=0, intercept=-log10(sig.5)) + 
+	scale_color_manual(values=c('black','red','blue'),
+		name='Chromosome', breaks=c('auto','chrX', 'chrY'), labels=c('Auto','X', 'Y')) + 
+	geom_abline(slope=0, intercept=-log10(sig.5[1])) + theme(legend.position="none") + labs(title='CD4+', x='log2FC', y='-log10(p-value)') +
+	theme(axis.title.y = element_text(size = rel(1.8), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.8)))	+
+	theme(axis.text.y = element_text(size = rel(1.6), angle = 90))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	geom_text(data=qqplot.data[order(qqplot.data$pval, decreasing=T),][1:50,], aes(label=gene))
+dev.off()
 
 joint.shared.sig <- intersect(rownames(joint.cd14.sig), rownames(joint.cd4.sig))
 
@@ -244,8 +328,14 @@ cd14.rep.meta <- cbind(cd14.rep.meta,
 	chr=annots[rownames(cd14.rep.meta), 'chr'],
 	gene=annots[rownames(cd14.rep.meta), "symbol_id"])
 cd14.rep.meta$chr <- as.character(cd14.rep.meta$chr)
+save(cd14.rep.meta, file='/group/stranger-lab/immvar_data/fit.meta.CD14.Robj')
 cd14.xesc <- (cd14.rep.meta$gene%in%xesc.genes & cd14.rep.meta$chr=='chrX')
 cd14.x.notxesc <- (!(cd14.rep.meta$gene%in%xesc.genes) & cd14.rep.meta$chr=='chrX')
+
+pdf(file='/home/t.cri.cczysz/metacd14pval.pdf', width=12, height=8)
+g <- ggplot(data=cd14.rep.meta, aes(x=P.value)) 
+g + geom_bar()
+dev.off()
 
 tmp <- character(nrow(cd14.rep.meta))
 tmp <- replace(tmp, cd14.xesc, 'xesc')
@@ -286,7 +376,12 @@ cd14.bar.df$female[23] <- 0
 #cd14.bar.df$count = cd14.bar.df$count[mixedorder(cd14.bar.df$chr)]
 g <- ggplot(data=melt(cd14.bar.df), aes(x=chr, y=value, fill=variable))
 g + geom_bar(stat='identity') + labs(title='', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
-	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
+	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red')) +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.text.x = element_text(size = rel(1.6), angle = 90))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	+
+	theme(legend.text = element_text(size= rel(1.6))) +
+	theme(legend.title = element_text(size= rel(1.5)))
 dev.off()
 
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14.meta.qq.pdf', width=12, height=8)
@@ -294,7 +389,19 @@ g <- ggplot(data=cd14.rep.meta, aes(x=-log10(seq(nrow(cd14.rep.meta))/nrow(cd14.
 g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
-	geom_abline()
+	geom_abline() +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	+
+	theme(legend.text = element_text(size= rel(1.6))) +
+	theme(legend.title = element_text(size= rel(1.5)))
+g <- ggplot(data=cd14.rep.meta, aes(x=-log10(seq(nrow(cd14.rep.meta))/nrow(cd14.rep.meta)), y=-log10(sort(P.value))))
+g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
+	geom_abline()+
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 dev.off()
 
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd14.meta.volcano.pdf', width=12, height=10)
@@ -302,13 +409,21 @@ g <- ggplot(data=cd14.rep.meta, aes(x=Zscore, y=-log10(P.value), color=replace(c
 p1 <- g + geom_point() + labs(title ='', x='Zscore', y='-log10(p-value)') +
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
-	geom_abline(slope=0, intercept=-log10(max(cd14.rep.sig.5$P.value))) + annotate("rect", xmin=-10, xmax=10, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") 
+	geom_abline(slope=0, intercept=-log10(max(cd14.rep.sig.5$P.value))) + annotate("rect", xmin=-10, xmax=10, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 
 p2 <- g + geom_point() + labs(title ='', x='Zscore', y='-log10(p-value)') +
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
 	geom_abline(slope=0, intercept=-log10(max(cd14.rep.sig.5$P.value))) +
-	scale_x_continuous(limits = c(-10, 10)) + scale_y_continuous(limits = c(0, 30)) 
+	scale_x_continuous(limits = c(-10, 10)) + scale_y_continuous(limits = c(0, 30)) +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 multiplot(p1,p2, cols=2)
 
 g <- ggplot(data=cd14.rep.meta, aes(x=Zscore, y=-log10(P.value), color=xesc))
@@ -320,6 +435,7 @@ cd4.rep.meta <- cbind(cd4.rep.meta,
 	chr=annots[rownames(cd4.rep.meta), 'chr'],
 	gene=annots[rownames(cd4.rep.meta), "symbol_id"])
 cd4.rep.meta$chr <- as.character(cd4.rep.meta$chr)
+save(cd4.rep.meta, file='/group/stranger-lab/immvar_data/fit.meta.CD4.Robj')
 tmp <- character(nrow(cd4.rep.meta))
 cd4.xesc <- (cd4.rep.meta$gene%in%xesc.genes & cd4.rep.meta$chr=='chrX')
 cd4.x.notxesc <- (!(cd4.rep.meta$gene%in%xesc.genes) & cd4.rep.meta$chr=='chrX')
@@ -335,8 +451,19 @@ g <- ggplot(data=cd4.rep.meta, aes(x=-log10(seq(nrow(cd4.rep.meta))/nrow(cd4.rep
 g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
-	geom_abline()
+	geom_abline()+
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 
+g <- ggplot(data=cd4.rep.meta, aes(x=-log10(seq(nrow(cd4.rep.meta))/nrow(cd4.rep.meta)), y=-log10(sort(P.value))))
+g + geom_point() + labs(title="", x='Expected -log10(p-value)', y='Observed -log10(p-value)') + 
+	geom_abline()+
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 dev.off()
 
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/metacd4.sig.chr.pdf', width=11, height=8)
@@ -368,7 +495,21 @@ cd4.bar.df$female <- as.numeric(cd4.bar.df$female / cd4.bar.allcount)
 #cd4.bar.df$count = cd4.bar.df$count[mixedorder(cd4.bar.df$chr)]
 g <- ggplot(data=melt(cd4.bar.df), aes(x=chr, y=value, fill=variable))
 g + geom_bar(stat='identity') + labs(title='', x='chromosome', y='percent') + guides(fill=guide_legend(title='Sex')) + 
-	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red'))
+	scale_fill_manual(name="Sex", breaks=c("female", "male"), labels=c("Female", "Male"), values=c('blue', 'red')) +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	+
+	theme(legend.text = element_text(size= rel(1.6))) +
+	theme(legend.title = element_text(size= rel(1.5)))
+dev.off()
+
+pdf(file='/home/t.cri.cczysz/metacd4pval.pdf', width=12, height=8)
+g <- ggplot(data=cd4.rep.meta, aes(x=P.value)) 
+g + geom_bar()
+g <- ggplot(data=cd4.rep.meta[rownames(subset(cd14.rep.meta, q.value<0.05)),], aes(x=P.value))
+g + geom_bar()
+g <- ggplot(data=cd14.rep.meta[rownames(subset(cd4.rep.meta, q.value<0.05)),], aes(x=P.value))
+g + geom_bar()
 dev.off()
 
 pdf(file='/group/stranger-lab/czysz/ImmVar/plots/cd4.meta.volcano.pdf', width=12, height=10)
@@ -377,13 +518,23 @@ g <- ggplot(data=cd4.rep.meta, aes(x=Zscore, y=-log10(P.value), color=replace(ch
 p1 <- g + geom_point() + labs(title ='', x='Zscore', y='-log10(P.value)') +
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) +
-	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value)) + annotate("rect", xmin=-10, xmax=10, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") 
+	geom_abline(slope=0, intercept=max(cd14.rep.sig.5$P.value)) + annotate("rect", xmin=-10, xmax=10, ymin=0, ymax=30, alpha=0.2) + theme(legend.position="none") +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	
 
 p2 <- g + geom_point() + labs(title ='', x='Zscore', y='-log10(p-value)') +
 	scale_color_manual(values=c('black', 'red','blue'),
 		name='Chromosome', breaks=c('auto', 'chrX', 'chrY'), labels=c('Auto', 'X', 'Y')) + 
 	geom_abline(slope=0, intercept=-log10(max(cd14.rep.sig.5$P.value))) + 
-	scale_x_continuous(limits = c(-10, 10)) + scale_y_continuous(limits = c(0, 30)) 
+	scale_x_continuous(limits = c(-10, 10)) + scale_y_continuous(limits = c(0, 30)) +
+	theme(axis.title.y = element_text(size = rel(1.4), angle = 90))	+
+	theme(axis.title.x = element_text(size = rel(1.4)))	+
+	theme(axis.text.x = element_text(size = rel(1.6)))	+
+	theme(axis.text.y = element_text(size = rel(1.6)))	+
+	theme(legend.text = element_text(size= rel(1.6))) +
+	theme(legend.title = element_text(size= rel(1.5)))
 multiplot(p1, p2, cols=2)
 g <- ggplot(data=cd4.rep.meta, aes(x=Zscore, y=-log10(P.value), color=xesc))
 g + geom_point() + labs(title ='', x='Zscore', y='-log10(p-value)') + geom_abline(slope=0, intercept=max(cd4.rep.sig.5$P.value)) + scale_color_manual(name='X-inactivation escape',breaks=c('notx', 'nxesc', 'xesc'), values=c('grey50', '#E69F00', 'green'), labels=c('Non-X', 'X-linked, not XIE', 'X-linked, XIE'))
